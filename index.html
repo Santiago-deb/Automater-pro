@@ -1,0 +1,2296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Automater Pro · AFD & APD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #0a0d0a;
+    --bg-panel: #0f140f;
+    --bg-elev: #161e16;
+    --border: #1f2a1f;
+    --border-light: #2d3a2d;
+    --fg: #ecebe0;
+    --fg-muted: #7a8270;
+    --accent: #b4ff39;
+    --accent-soft: rgba(180, 255, 57, 0.15);
+    --accent-glow: rgba(180, 255, 57, 0.4);
+    --danger: #ff5e62;
+    --danger-soft: rgba(255, 94, 98, 0.15);
+    --warning: #ffb627;
+    --warning-soft: rgba(255, 182, 39, 0.15);
+    --final: #ff5e62;
+    --stack: #4dd0e1;
+    --stack-soft: rgba(77, 208, 225, 0.15);
+    --stack-glow: rgba(77, 208, 225, 0.4);
+    --z0: #ffb627;
+    --z0-soft: rgba(255, 182, 39, 0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  *::selection { background: var(--accent); color: var(--bg-deep); }
+
+  html, body { height: 100%; overflow: hidden; }
+
+  body {
+    font-family: 'Space Grotesk', -apple-system, sans-serif;
+    background:
+      radial-gradient(ellipse 800px 600px at 20% -10%, rgba(180, 255, 57, 0.06), transparent 60%),
+      radial-gradient(ellipse 600px 800px at 100% 100%, rgba(255, 94, 98, 0.04), transparent 60%),
+      radial-gradient(ellipse 500px 500px at 0% 100%, rgba(77, 208, 225, 0.04), transparent 60%),
+      var(--bg-deep);
+    color: var(--fg);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button { font-family: inherit; }
+
+  .app {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    grid-template-rows: 64px 1fr;
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  .app-header {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10, 13, 10, 0.8);
+    backdrop-filter: blur(20px);
+    z-index: 20;
+    gap: 16px;
+  }
+
+  .logo { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+
+  .logo-mark {
+    width: 34px; height: 34px;
+    position: relative;
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 16px var(--accent-glow);
+    flex-shrink: 0;
+  }
+  .logo-mark::before {
+    content: '';
+    position: absolute;
+    inset: 5px;
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+  }
+  .logo-mark::after {
+    content: '';
+    position: absolute;
+    left: -9px;
+    top: 50%;
+    width: 6px; height: 2px;
+    background: var(--accent);
+    transform: translateY(-50%);
+  }
+
+  .logo-text h1 {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .logo-text p {
+    font-size: 10px;
+    color: var(--fg-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-top: 2px;
+  }
+
+  .header-center { display: flex; gap: 4px; flex: 1; justify-content: center; }
+
+  .type-toggle {
+    display: inline-flex;
+    background: var(--bg-elev);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    padding: 3px;
+    gap: 2px;
+  }
+
+  .type-btn {
+    border: none;
+    background: transparent;
+    color: var(--fg-muted);
+    padding: 7px 18px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+  }
+  .type-btn.active {
+    background: var(--accent);
+    color: var(--bg-deep);
+    box-shadow: 0 0 14px var(--accent-glow);
+  }
+  .type-btn.active.apd {
+    background: var(--stack);
+    box-shadow: 0 0 14px var(--stack-glow);
+  }
+
+  .header-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+  .btn {
+    border: 1px solid var(--border-light);
+    background: var(--bg-elev);
+    color: var(--fg);
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary {
+    background: var(--accent);
+    color: var(--bg-deep);
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  .btn-primary:hover {
+    background: var(--accent); color: var(--bg-deep);
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+  .btn-block { width: 100%; justify-content: center; }
+  .btn-stack { background: var(--stack); color: var(--bg-deep); border-color: var(--stack); font-weight: 600; }
+  .btn-stack:hover { background: var(--stack); color: var(--bg-deep); box-shadow: 0 0 20px var(--stack-glow); }
+
+  .canvas-area {
+    position: relative;
+    overflow: hidden;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.04) 1px, transparent 0);
+    background-size: 24px 24px;
+    touch-action: none;
+  }
+
+  #canvas { width: 100%; height: 100%; display: block; cursor: default; }
+  #canvas.mode-add { cursor: crosshair; }
+  #canvas.mode-connect { cursor: pointer; }
+  #canvas.mode-delete { cursor: not-allowed; }
+
+  .toolbar {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 10;
+    background: rgba(15, 20, 15, 0.85);
+    backdrop-filter: blur(12px);
+    padding: 5px;
+    border-radius: 12px;
+    border: 1px solid var(--border-light);
+  }
+
+  .tool-btn {
+    width: 40px; height: 40px;
+    border: none;
+    background: transparent;
+    color: var(--fg-muted);
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .tool-btn:hover { background: var(--bg-elev); color: var(--fg); }
+  .tool-btn.active {
+    background: var(--accent);
+    color: var(--bg-deep);
+    box-shadow: 0 0 14px var(--accent-glow);
+  }
+  .tool-btn.active.apd {
+    background: var(--stack);
+    box-shadow: 0 0 14px var(--stack-glow);
+  }
+
+  .canvas-hint {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 18px;
+    background: rgba(15, 20, 15, 0.85);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-light);
+    border-radius: 999px;
+    font-size: 13px;
+    color: var(--fg-muted);
+    z-index: 5;
+    transition: opacity 0.3s;
+    max-width: 90%;
+    text-align: center;
+    pointer-events: none;
+  }
+  .canvas-hint.hidden { opacity: 0; }
+
+  .hint-pulse {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    flex-shrink: 0;
+    animation: pulse 2s infinite;
+  }
+  .hint-pulse.apd { background: var(--stack); }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 var(--accent-glow); }
+    50% { box-shadow: 0 0 0 8px transparent; }
+  }
+
+  .panel {
+    background: var(--bg-panel);
+    border-left: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .panel::-webkit-scrollbar { width: 6px; }
+  .panel::-webkit-scrollbar-track { background: transparent; }
+  .panel::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+
+  .panel-section {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+  }
+
+  .panel-section h3 {
+    font-size: 11px;
+    color: var(--fg-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+  }
+  .panel-section h3::before {
+    content: '';
+    width: 5px; height: 5px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 6px var(--accent-glow);
+  }
+  .panel-section.stack-section h3::before { background: var(--stack); box-shadow: 0 0 6px var(--stack-glow); }
+
+  .counter {
+    margin-left: auto;
+    background: var(--bg-deep);
+    color: var(--fg-muted);
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border-light);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  .input {
+    width: 100%;
+    background: var(--bg-deep);
+    border: 1px solid var(--border-light);
+    color: var(--fg);
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .input.mono {
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.05em;
+  }
+  .input.stack-focus:focus {
+    border-color: var(--stack);
+    box-shadow: 0 0 0 3px var(--stack-soft);
+  }
+
+  .label-input { display: flex; flex-direction: column; gap: 4px; }
+  .label-input label {
+    font-size: 10px;
+    color: var(--fg-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+  }
+
+  .hint {
+    font-size: 11px;
+    color: var(--fg-muted);
+    margin-top: 6px;
+  }
+  .hint code {
+    background: var(--bg-deep);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+  }
+
+  .list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+  .list::-webkit-scrollbar { width: 4px; }
+  .list::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 2px; }
+
+  .empty {
+    color: var(--fg-muted);
+    font-size: 12px;
+    text-align: center;
+    padding: 12px 0;
+    font-style: italic;
+  }
+
+  .state-item, .trans-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+  }
+
+  .state-item .badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 24px;
+    padding: 0 6px;
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 12px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-light);
+    color: var(--fg);
+  }
+
+  .state-item .tags { display: flex; gap: 4px; flex: 1; flex-wrap: wrap; }
+
+  .tag {
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+  }
+  .tag.start { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent); }
+  .tag.final { background: var(--danger-soft); color: var(--final); border: 1px solid var(--final); }
+
+  .state-item .state-actions { display: flex; gap: 2px; }
+
+  .icon-btn {
+    width: 26px; height: 26px;
+    border: none;
+    background: transparent;
+    color: var(--fg-muted);
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .icon-btn:hover { background: var(--bg-elev); color: var(--fg); }
+  .icon-btn.active { color: var(--accent); background: var(--accent-soft); }
+  .icon-btn.active.final-btn { color: var(--final); background: var(--danger-soft); }
+
+  .trans-item {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+  .trans-row { display: flex; align-items: center; gap: 6px; }
+  .trans-from { color: var(--accent); font-weight: 700; }
+  .trans-arrow { color: var(--fg-muted); }
+  .trans-to { color: var(--fg); font-weight: 700; }
+  .trans-detail {
+    color: var(--stack);
+    background: var(--stack-soft);
+    padding: 1px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--stack);
+    margin-left: auto;
+    font-weight: 700;
+    font-size: 10px;
+  }
+  .trans-output {
+    color: var(--warning);
+    background: var(--warning-soft);
+    padding: 1px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--warning);
+    font-weight: 700;
+    font-size: 10px;
+  }
+  .trans-delete {
+    margin-left: auto;
+    width: 22px; height: 22px;
+    border: none;
+    background: transparent;
+    color: var(--fg-muted);
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .trans-delete:hover { background: var(--danger-soft); color: var(--danger); }
+
+  .test-input-row { display: flex; gap: 8px; margin-bottom: 12px; }
+  .test-input-row .input { flex: 1; }
+
+  .test-result {
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 13px;
+    display: none;
+    margin-bottom: 8px;
+  }
+  .test-result.show { display: block; animation: slideIn 0.3s; }
+  .test-result.accepted {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+  .test-result.rejected {
+    background: var(--danger-soft);
+    color: var(--danger);
+    border: 1px solid var(--danger);
+  }
+  .test-result.warning {
+    background: var(--warning-soft);
+    color: var(--warning);
+    border: 1px solid var(--warning);
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .test-trace {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    margin-top: 8px;
+  }
+
+  .trace-state {
+    background: var(--bg-deep);
+    border: 1px solid var(--border-light);
+    color: var(--fg);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+  .trace-state.current {
+    background: var(--accent);
+    color: var(--bg-deep);
+    border-color: var(--accent);
+    box-shadow: 0 0 12px var(--accent-glow);
+  }
+  .trace-state.current.apd {
+    background: var(--stack);
+    border-color: var(--stack);
+    box-shadow: 0 0 12px var(--stack-glow);
+  }
+  .trace-symbol { color: var(--accent); font-weight: 700; padding: 0 2px; }
+  .trace-symbol.apd { color: var(--stack); }
+
+  /* Pila visual */
+  .stack-visual {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 3px;
+    align-items: center;
+    min-height: 40px;
+    padding: 8px;
+    background: var(--bg-deep);
+    border: 1px dashed var(--border-light);
+    border-radius: 8px;
+    margin-top: 8px;
+    max-height: 180px;
+    overflow-y: auto;
+  }
+  .stack-visual::-webkit-scrollbar { width: 4px; }
+  .stack-visual::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 2px; }
+
+  .stack-cell {
+    width: 100%;
+    text-align: center;
+    padding: 6px;
+    background: var(--stack-soft);
+    border: 1px solid var(--stack);
+    color: var(--stack);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 14px;
+    border-radius: 6px;
+    animation: stackPush 0.3s;
+    position: relative;
+  }
+  .stack-cell.z0 {
+    background: var(--z0-soft);
+    border-color: var(--z0);
+    color: var(--z0);
+  }
+  .stack-cell.top::before {
+    content: 'tope';
+    position: absolute;
+    left: -38px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 8px;
+    color: var(--stack);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  @keyframes stackPush {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .config-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+  .config-label {
+    color: var(--fg-muted);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 600;
+  }
+  .config-value { color: var(--fg); font-weight: 700; }
+  .config-value.accent { color: var(--accent); }
+  .config-value.stack { color: var(--stack); }
+  .config-value.warning { color: var(--z0); }
+
+  .modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  .modal.show { display: flex; animation: fadeIn 0.2s; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .modal-content {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-light);
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-content h3 { margin-bottom: 8px; font-size: 16px; font-weight: 600; }
+
+  .modal-subtitle {
+    color: var(--fg-muted);
+    font-size: 13px;
+    margin-bottom: 16px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .modal-subtitle span { color: var(--accent); font-weight: 700; }
+  .modal-subtitle span.stack { color: var(--stack); }
+
+  .symbol-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .symbol-btn {
+    background: var(--bg-elev);
+    border: 1px solid var(--border-light);
+    color: var(--fg);
+    padding: 14px;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .symbol-btn:hover {
+    background: var(--accent);
+    color: var(--bg-deep);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  .symbol-btn:active { transform: translateY(0); }
+  .symbol-btn.epsilon {
+    background: var(--bg-deep);
+    border-style: dashed;
+    color: var(--warning);
+  }
+  .symbol-btn.epsilon:hover {
+    background: var(--warning);
+    color: var(--bg-deep);
+    border-color: var(--warning);
+  }
+  .symbol-btn.stack-btn {
+    background: var(--bg-deep);
+    color: var(--stack);
+    border-color: var(--stack);
+  }
+  .symbol-btn.stack-btn:hover {
+    background: var(--stack);
+    color: var(--bg-deep);
+  }
+
+  .modal-section { margin-bottom: 16px; }
+  .modal-section-label {
+    font-size: 10px;
+    color: var(--fg-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .modal-actions { display: flex; gap: 8px; }
+  .modal-actions .btn { flex: 1; justify-content: center; }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--bg-panel);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 13px;
+    z-index: 200;
+    transition: transform 0.3s, opacity 0.3s;
+    opacity: 0;
+    pointer-events: none;
+    max-width: 90%;
+    text-align: center;
+  }
+  .toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  .toast.error { border-color: var(--danger); color: var(--danger); }
+  .toast.success { border-color: var(--accent); color: var(--accent); }
+  .toast.stack { border-color: var(--stack); color: var(--stack); }
+
+  /* SVG */
+  .state-node { cursor: grab; }
+  .state-node:active { cursor: grabbing; }
+  #canvas.mode-connect .state-node,
+  #canvas.mode-delete .state-node,
+  #canvas.mode-add .state-node { cursor: pointer; }
+
+  .state-circle {
+    fill: var(--bg-elev);
+    stroke: var(--fg-muted);
+    stroke-width: 2.5;
+    transition: stroke 0.2s, fill 0.2s;
+  }
+  .state-node:hover .state-circle { stroke: var(--fg); }
+  .state-node.is-start .state-circle { stroke: var(--accent); }
+  .state-node.is-final .state-circle { stroke: var(--final); }
+  .state-node.is-selected .state-circle { fill: var(--accent-soft); }
+  .state-node.apd.is-start .state-circle { stroke: var(--stack); }
+  .state-node.apd.is-selected .state-circle { fill: var(--stack-soft); }
+  .state-node.connecting-source .state-circle {
+    fill: var(--accent-soft);
+    stroke: var(--accent);
+    stroke-width: 3;
+    filter: drop-shadow(0 0 12px var(--accent-glow));
+  }
+  .state-node.apd.connecting-source .state-circle {
+    fill: var(--stack-soft);
+    stroke: var(--stack);
+    filter: drop-shadow(0 0 12px var(--stack-glow));
+  }
+  .state-node.current .state-circle {
+    fill: var(--accent);
+    stroke: var(--accent);
+    animation: statePulse 1s infinite;
+  }
+  .state-node.current.apd .state-circle {
+    fill: var(--stack);
+    stroke: var(--stack);
+    animation: statePulseStack 1s infinite;
+  }
+  @keyframes statePulse {
+    0%, 100% { filter: drop-shadow(0 0 12px var(--accent-glow)); }
+    50% { filter: drop-shadow(0 0 24px var(--accent-glow)); }
+  }
+  @keyframes statePulseStack {
+    0%, 100% { filter: drop-shadow(0 0 12px var(--stack-glow)); }
+    50% { filter: drop-shadow(0 0 24px var(--stack-glow)); }
+  }
+  .state-node.current .state-label { fill: var(--bg-deep); }
+
+  .state-label {
+    fill: var(--fg);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 14px;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .state-final-ring {
+    fill: none;
+    stroke: var(--final);
+    stroke-width: 2;
+    pointer-events: none;
+  }
+
+  .state-start-arrow {
+    stroke: var(--accent);
+    stroke-width: 2;
+    fill: none;
+    pointer-events: none;
+  }
+  .state-start-arrow.apd { stroke: var(--stack); }
+
+  .edge-path {
+    fill: none;
+    stroke: var(--fg-muted);
+    stroke-width: 2;
+    transition: stroke 0.2s, stroke-width 0.2s;
+  }
+  .edge-path.is-active {
+    stroke: var(--accent);
+    stroke-width: 3;
+    filter: drop-shadow(0 0 8px var(--accent-glow));
+  }
+  .edge-path.is-active.apd {
+    stroke: var(--stack);
+    filter: drop-shadow(0 0 8px var(--stack-glow));
+  }
+
+  .edge-hit {
+    fill: none;
+    stroke: rgba(0, 0, 0, 0.001);
+    stroke-width: 24;
+    pointer-events: stroke;
+    cursor: pointer;
+  }
+
+  .edge-label-bg {
+    fill: var(--bg-deep);
+    stroke: var(--border-light);
+    stroke-width: 1.5;
+    pointer-events: none;
+  }
+  .edge-path.is-active ~ .edge-label-bg {
+    fill: var(--accent);
+    stroke: var(--accent);
+  }
+  .edge-path.is-active.apd ~ .edge-label-bg {
+    fill: var(--stack);
+    stroke: var(--stack);
+  }
+  .edge-path.is-active ~ .edge-label {
+    fill: var(--bg-deep);
+  }
+
+  .edge-label {
+    fill: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 11px;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+    user-select: none;
+  }
+  .edge-label.apd { fill: var(--stack); }
+
+  .multi-edge-info {
+    font-size: 11px;
+    color: var(--fg-muted);
+    text-align: center;
+    padding: 8px;
+    background: var(--bg-deep);
+    border: 1px dashed var(--border-light);
+    border-radius: 6px;
+    margin-bottom: 8px;
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .app {
+      grid-template-columns: 1fr;
+      grid-template-rows: 56px 1fr 46vh;
+    }
+    .panel {
+      border-left: none;
+      border-top: 1px solid var(--border);
+      padding: 12px;
+      gap: 10px;
+    }
+    .panel-section { padding: 12px; }
+    .logo-text p { display: none; }
+    .logo-text h1 { font-size: 15px; }
+    .logo-mark { width: 30px; height: 30px; }
+    .header-actions .btn { padding: 8px; }
+    .header-actions .btn span { display: none; }
+    .header-center { justify-content: flex-start; }
+    .type-btn { padding: 6px 12px; font-size: 12px; }
+    .toolbar {
+      flex-direction: row;
+      top: 12px;
+      left: 12px;
+      padding: 4px;
+    }
+    .tool-btn { width: 36px; height: 36px; }
+    .tool-btn svg { width: 16px; height: 16px; }
+    .canvas-hint { font-size: 11px; padding: 8px 14px; bottom: 12px; }
+    .list { max-height: 120px; }
+    .modal-content { padding: 18px; }
+    .app-header { padding: 0 12px; gap: 8px; }
+  }
+
+  @media (max-width: 380px) {
+    .panel { padding: 10px; }
+    .panel-section { padding: 10px; }
+    .type-btn { padding: 6px 10px; font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="app-header">
+    <div class="logo">
+      <div class="logo-mark"></div>
+      <div class="logo-text">
+        <h1>Automater Pro</h1>
+        <p>AFD & APD</p>
+      </div>
+    </div>
+    <div class="header-center">
+      <div class="type-toggle">
+        <button class="type-btn active" data-type="afd">AFD</button>
+        <button class="type-btn" data-type="apd">Pila (APD)</button>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn" id="btnExample">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+        <span>Ejemplo</span>
+      </button>
+      <button class="btn" id="btnClear">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+        <span>Limpiar</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="canvas-area">
+    <div class="toolbar">
+      <button class="tool-btn active" data-mode="select" title="Seleccionar y mover">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l7 17 2-7 7-2z"/></svg>
+      </button>
+      <button class="tool-btn" data-mode="add" title="Agregar estado">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+      </button>
+      <button class="tool-btn" data-mode="connect" title="Conectar estados">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M9 9l6 6"/></svg>
+      </button>
+      <button class="tool-btn" data-mode="delete" title="Eliminar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2M6 6l1 14a2 2 0 002 2h8a2 2 0 002-2l1-14"/></svg>
+      </button>
+    </div>
+
+    <svg id="canvas" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow-default" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#7a8270"/>
+        </marker>
+        <marker id="arrow-active" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#b4ff39"/>
+        </marker>
+        <marker id="arrow-active-stack" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#4dd0e1"/>
+        </marker>
+        <marker id="arrow-start" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#b4ff39"/>
+        </marker>
+        <marker id="arrow-start-stack" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#4dd0e1"/>
+        </marker>
+      </defs>
+      <g id="edges-group"></g>
+      <g id="states-group"></g>
+    </svg>
+
+    <div class="canvas-hint" id="canvasHint">
+      <span class="hint-pulse" id="hintPulse"></span>
+      <span id="hintText">Selecciona "Agregar estado" y haz clic en el lienzo</span>
+    </div>
+  </main>
+
+  <aside class="panel">
+    <section class="panel-section" id="alphabetSection">
+      <h3>Alfabeto de entrada (Σ)</h3>
+      <input type="text" id="alphabetInput" class="input mono" placeholder="a, b, 0, 1..." value="0, 1">
+      <p class="hint">Símbolos separados por comas</p>
+    </section>
+
+    <section class="panel-section stack-section" id="stackSection" style="display:none">
+      <h3>Alfabeto de pila (P) y Z₀</h3>
+      <div class="row-2">
+        <div class="label-input">
+          <label>P (símbolos)</label>
+          <input type="text" id="stackAlphabetInput" class="input mono stack-focus" placeholder="A, B, Z" value="A, Z">
+        </div>
+        <div class="label-input">
+          <label>Z₀ (inicial)</label>
+          <input type="text" id="initialStackInput" class="input mono stack-focus" placeholder="Z" value="Z" maxlength="2">
+        </div>
+      </div>
+      <p class="hint">Z₀ se carga al inicio de la pila. Para transiciones usa <code>ε</code> para no leer entrada.</p>
+    </section>
+
+    <section class="panel-section">
+      <h3>Estados (Q) <span class="counter" id="stateCount">0</span></h3>
+      <div class="list" id="statesList">
+        <p class="empty">Sin estados todavía</p>
+      </div>
+    </section>
+
+    <section class="panel-section">
+      <h3>Transiciones (δ) <span class="counter" id="transCount">0</span></h3>
+      <div class="list" id="transList">
+        <p class="empty">Sin transiciones todavía</p>
+      </div>
+    </section>
+
+    <section class="panel-section">
+      <h3>Verificar cadena</h3>
+      <div class="test-input-row">
+        <input type="text" id="testString" class="input mono" placeholder="aabb">
+        <button class="btn btn-primary" id="btnVerify">Verificar</button>
+      </div>
+      <div class="test-result" id="testResult"></div>
+      <div class="test-trace" id="testTrace"></div>
+      <div id="stackVisualWrap"></div>
+    </section>
+  </aside>
+</div>
+
+<!-- Modal para AFD: selección de símbolo -->
+<div class="modal" id="symbolModal">
+  <div class="modal-content">
+    <h3>Símbolo de transición</h3>
+    <p class="modal-subtitle">De <span id="modalFrom">q0</span> a <span id="modalTo">q1</span></p>
+    <div class="symbol-grid" id="symbolGrid"></div>
+    <button class="btn btn-block" id="modalCancel">Cancelar</button>
+  </div>
+</div>
+
+<!-- Modal para APD: configuración completa de transición -->
+<div class="modal" id="stackModal">
+  <div class="modal-content">
+    <h3>Configurar transición de pila</h3>
+    <p class="modal-subtitle">De <span id="stackModalFrom">q0</span> a <span id="stackModalTo">q1</span></p>
+
+    <div class="multi-edge-info" id="multiEdgeInfo" style="display:none"></div>
+
+    <div class="modal-section">
+      <span class="modal-section-label">1 · Símbolo de entrada (o ε)</span>
+      <div class="symbol-grid" id="inputSymbolGrid"></div>
+    </div>
+
+    <div class="modal-section">
+      <span class="modal-section-label">2 · Tope de pila (X)</span>
+      <div class="symbol-grid" id="stackTopGrid"></div>
+    </div>
+
+    <div class="modal-section">
+      <span class="modal-section-label">3 · Reemplazo de pila (α) — usa ε para desapilar</span>
+      <input type="text" id="stackReplaceInput" class="input mono stack-focus" placeholder="AA, A, ε, AZ..." style="font-size:16px; text-align:center;">
+      <p class="hint">El primer símbolo queda en el <strong>tope</strong>. Ej: <code>AA</code> apila A sobre A; <code>ε</code> desapila.</p>
+    </div>
+
+    <div class="modal-section">
+      <span class="modal-section-label">4 · Salida (opcional, para traductor)</span>
+      <input type="text" id="outputInput" class="input mono" placeholder="(vacío = sin salida)">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn" id="stackModalCancel">Cancelar</button>
+      <button class="btn btn-stack" id="stackModalConfirm">Crear transición</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const App = {
+  state: {
+    automatonType: 'afd',
+    alphabet: ['0', '1'],
+    stackAlphabet: ['A', 'Z'],
+    initialStackSymbol: 'Z',
+    states: [],
+    transitions: [],
+    selectedState: null,
+    connectFrom: null,
+    mode: 'select',
+    nextId: 1,
+    nextTransId: 1,
+    currentTestState: null,
+    activeTransition: null,
+    pendingDrag: null,
+    suppressClick: false,
+    testing: false,
+    stackModal: { from: null, to: null, input: null, stackTop: null }
+  },
+
+  svg: null,
+  edgesGroup: null,
+  statesGroup: null,
+
+  hints: {
+    select: 'Arrastra los estados para moverlos · clic para seleccionar',
+    add: 'Haz clic en el lienzo para agregar · clic en estado alterna final',
+    connect: 'Clic en estado origen, luego en destino (mismo estado = bucle)',
+    delete: 'Clic en estado o transición para eliminarlo'
+  },
+
+  init() {
+    this.svg = document.getElementById('canvas');
+    this.edgesGroup = document.getElementById('edges-group');
+    this.statesGroup = document.getElementById('states-group');
+
+    this.bindEvents();
+    this.loadExample();
+    this.updateHint();
+    this.render();
+  },
+
+  bindEvents() {
+    document.querySelectorAll('.type-btn').forEach(btn => {
+      btn.addEventListener('click', () => this.switchType(btn.dataset.type));
+    });
+
+    document.querySelectorAll('.tool-btn').forEach(btn => {
+      btn.addEventListener('click', () => this.setMode(btn.dataset.mode));
+    });
+
+    this.svg.addEventListener('pointerdown', (e) => this.handlePointerDown(e));
+    this.svg.addEventListener('pointermove', (e) => this.handlePointerMove(e));
+    document.addEventListener('pointerup', () => this.handlePointerUp());
+    this.svg.addEventListener('click', (e) => this.handleClick(e));
+
+    document.getElementById('alphabetInput').addEventListener('input', (e) => {
+      this.state.alphabet = e.target.value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      this.renderTransList();
+    });
+
+    document.getElementById('stackAlphabetInput').addEventListener('input', (e) => {
+      this.state.stackAlphabet = e.target.value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      this.renderTransList();
+    });
+
+    document.getElementById('initialStackInput').addEventListener('input', (e) => {
+      this.state.initialStackSymbol = e.target.value.trim();
+      this.renderTransList();
+    });
+
+    document.getElementById('btnVerify').addEventListener('click', () => this.verifyString());
+    document.getElementById('testString').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') this.verifyString();
+    });
+
+    document.getElementById('btnClear').addEventListener('click', () => this.clearAll());
+    document.getElementById('btnExample').addEventListener('click', () => this.loadExample());
+
+    document.getElementById('modalCancel').addEventListener('click', () => this.closeSymbolModal());
+    document.getElementById('symbolModal').addEventListener('click', (e) => {
+      if (e.target.id === 'symbolModal') this.closeSymbolModal();
+    });
+
+    document.getElementById('stackModalCancel').addEventListener('click', () => this.closeStackModal());
+    document.getElementById('stackModal').addEventListener('click', (e) => {
+      if (e.target.id === 'stackModal') this.closeStackModal();
+    });
+    document.getElementById('stackModalConfirm').addEventListener('click', () => this.confirmStackTransition());
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { this.closeSymbolModal(); this.closeStackModal(); }
+    });
+  },
+
+  switchType(type) {
+    if (this.state.automatonType === type) return;
+    this.state.automatonType = type;
+    document.querySelectorAll('.type-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.type === type);
+      btn.classList.toggle('apd', type === 'apd' && btn.dataset.type === 'apd');
+    });
+    document.getElementById('stackSection').style.display = type === 'apd' ? 'block' : 'none';
+    document.querySelectorAll('.tool-btn.active').forEach(btn => {
+      btn.classList.toggle('apd', type === 'apd');
+    });
+    document.getElementById('hintPulse').classList.toggle('apd', type === 'apd');
+    this.loadExample();
+  },
+
+  setMode(mode) {
+    this.state.mode = mode;
+    this.state.connectFrom = null;
+    this.state.selectedState = null;
+    document.querySelectorAll('.tool-btn').forEach(btn => {
+      const isActive = btn.dataset.mode === mode;
+      btn.classList.toggle('active', isActive);
+      btn.classList.toggle('apd', isActive && this.state.automatonType === 'apd');
+    });
+    this.svg.setAttribute('class', `mode-${mode}`);
+    this.updateHint();
+    this.render();
+  },
+
+  updateHint() {
+    const hint = document.getElementById('hintText');
+    if (this.state.states.length === 0) {
+      hint.textContent = 'Selecciona "Agregar estado" y haz clic en el lienzo';
+    } else {
+      hint.textContent = this.hints[this.state.mode];
+    }
+  },
+
+  getMousePos(e) {
+    const rect = this.svg.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  },
+
+  handlePointerDown(e) {
+    const target = e.target;
+    const stateEl = target.closest('.state-node');
+
+    if (stateEl && this.state.mode === 'select') {
+      const id = parseInt(stateEl.dataset.id);
+      const pos = this.getMousePos(e);
+      const st = this.state.states.find(s => s.id === id);
+      if (st) {
+        this.state.pendingDrag = {
+          id, startX: pos.x, startY: pos.y,
+          offsetX: pos.x - st.x, offsetY: pos.y - st.y, active: false
+        };
+      }
+    }
+  },
+
+  handlePointerMove(e) {
+    if (!this.state.pendingDrag) return;
+    const pd = this.state.pendingDrag;
+    const pos = this.getMousePos(e);
+    const dx = pos.x - pd.startX;
+    const dy = pos.y - pd.startY;
+    if (!pd.active && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) pd.active = true;
+    if (pd.active) {
+      const st = this.state.states.find(s => s.id === pd.id);
+      if (st) {
+        st.x = pos.x - pd.offsetX;
+        st.y = pos.y - pd.offsetY;
+        this.renderCanvas();
+      }
+    }
+  },
+
+  handlePointerUp() {
+    if (this.state.pendingDrag && this.state.pendingDrag.active) {
+      this.state.suppressClick = true;
+      setTimeout(() => { this.state.suppressClick = false; }, 50);
+    }
+    this.state.pendingDrag = null;
+  },
+
+  handleClick(e) {
+    if (this.state.suppressClick) return;
+    const target = e.target;
+    const stateEl = target.closest('.state-node');
+    const edgeEl = target.closest('.edge-group');
+
+    if (stateEl) {
+      const id = parseInt(stateEl.dataset.id);
+      this.handleStateClick(id);
+    } else if (edgeEl) {
+      const id = parseInt(edgeEl.dataset.id);
+      this.handleEdgeClick(id);
+    } else {
+      if (this.state.mode === 'add') {
+        const pos = this.getMousePos(e);
+        this.addState(pos.x, pos.y);
+      } else {
+        this.state.selectedState = null;
+        this.state.connectFrom = null;
+        this.render();
+      }
+    }
+  },
+
+  handleStateClick(id) {
+    const st = this.state.states.find(s => s.id === id);
+    if (!st) return;
+
+    if (this.state.mode === 'select') {
+      this.state.selectedState = id;
+      this.render();
+    } else if (this.state.mode === 'add') {
+      st.isFinal = !st.isFinal;
+      this.render();
+      this.showToast(`${st.label} ${st.isFinal ? 'ahora es final' : 'ya no es final'}`, 'success');
+    } else if (this.state.mode === 'connect') {
+      if (!this.state.connectFrom) {
+        this.state.connectFrom = id;
+        this.render();
+      } else if (this.state.connectFrom === id) {
+        this.openTransitionModal(id, id);
+        this.state.connectFrom = null;
+      } else {
+        this.openTransitionModal(this.state.connectFrom, id);
+        this.state.connectFrom = null;
+      }
+    } else if (this.state.mode === 'delete') {
+      this.deleteState(id);
+    }
+  },
+
+  handleEdgeClick(id) {
+    if (this.state.mode === 'delete') {
+      this.deleteTransition(id);
+    }
+  },
+
+  addState(x, y) {
+    const id = this.state.nextId++;
+    const isFirst = this.state.states.length === 0;
+    this.state.states.push({
+      id, x, y, label: `q${id - 1}`, isStart: isFirst, isFinal: false
+    });
+    this.updateHint();
+    this.render();
+  },
+
+  deleteState(id) {
+    const st = this.state.states.find(s => s.id === id);
+    this.state.states = this.state.states.filter(s => s.id !== id);
+    this.state.transitions = this.state.transitions.filter(t => t.from !== id && t.to !== id);
+    if (this.state.selectedState === id) this.state.selectedState = null;
+    if (this.state.connectFrom === id) this.state.connectFrom = null;
+    this.updateHint();
+    this.render();
+    if (st) this.showToast(`Estado ${st.label} eliminado`);
+  },
+
+  deleteTransition(id) {
+    this.state.transitions = this.state.transitions.filter(t => t.id !== id);
+    this.render();
+    this.showToast('Transición eliminada');
+  },
+
+  setStart(id) {
+    this.state.states.forEach(s => s.isStart = (s.id === id));
+    this.render();
+    const st = this.state.states.find(s => s.id === id);
+    if (st) this.showToast(`${st.label} es ahora el estado inicial`, 'success');
+  },
+
+  toggleFinal(id) {
+    const st = this.state.states.find(s => s.id === id);
+    if (st) { st.isFinal = !st.isFinal; this.render(); }
+  },
+
+  openTransitionModal(from, to) {
+    if (this.state.automatonType === 'afd') {
+      this.openSymbolModal(from, to);
+    } else {
+      this.openStackModal(from, to);
+    }
+  },
+
+  openSymbolModal(from, to) {
+    const fromState = this.state.states.find(s => s.id === from);
+    const toState = this.state.states.find(s => s.id === to);
+    if (!fromState || !toState) return;
+
+    const available = this.state.alphabet.filter(sym =>
+      !this.state.transitions.some(t => t.from === from && t.symbol === sym && !t.isEpsilon)
+    );
+
+    if (available.length === 0) {
+      this.showToast(`${fromState.label} ya tiene transiciones para todo el alfabeto`, 'error');
+      return;
+    }
+
+    document.getElementById('modalFrom').textContent = fromState.label;
+    document.getElementById('modalTo').textContent = toState.label;
+
+    const grid = document.getElementById('symbolGrid');
+    grid.innerHTML = '';
+
+    available.forEach(sym => {
+      const btn = document.createElement('button');
+      btn.className = 'symbol-btn';
+      btn.textContent = sym;
+      btn.addEventListener('click', () => {
+        this.addTransition(from, to, { symbol: sym });
+        this.closeSymbolModal();
+      });
+      grid.appendChild(btn);
+    });
+
+    document.getElementById('symbolModal').classList.add('show');
+  },
+
+  closeSymbolModal() {
+    document.getElementById('symbolModal').classList.remove('show');
+  },
+
+  openStackModal(from, to) {
+    const fromState = this.state.states.find(s => s.id === from);
+    const toState = this.state.states.find(s => s.id === to);
+    if (!fromState || !toState) return;
+
+    if (this.state.stackAlphabet.length === 0) {
+      this.showToast('Define el alfabeto de pila primero', 'error');
+      return;
+    }
+
+    this.state.stackModal = { from, to, input: null, stackTop: null };
+
+    document.getElementById('stackModalFrom').textContent = fromState.label;
+    document.getElementById('stackModalTo').textContent = toState.label;
+    document.getElementById('stackReplaceInput').value = '';
+    document.getElementById('outputInput').value = '';
+
+    const existing = this.state.transitions.filter(t => t.from === from && t.to === to);
+    const info = document.getElementById('multiEdgeInfo');
+    if (existing.length > 0) {
+      info.style.display = 'block';
+      info.textContent = `Ya hay ${existing.length} transición(es) entre ${fromState.label} y ${toState.label}. Puedes agregar más.`;
+    } else {
+      info.style.display = 'none';
+    }
+
+    const inputGrid = document.getElementById('inputSymbolGrid');
+    inputGrid.innerHTML = '';
+    
+    const epsBtn = document.createElement('button');
+    epsBtn.className = 'symbol-btn epsilon';
+    epsBtn.innerHTML = 'ε';
+    epsBtn.title = 'Transición sin consumir entrada';
+    epsBtn.addEventListener('click', () => this.selectStackInput(''));
+    inputGrid.appendChild(epsBtn);
+
+    this.state.alphabet.forEach(sym => {
+      const btn = document.createElement('button');
+      btn.className = 'symbol-btn';
+      btn.textContent = sym;
+      btn.addEventListener('click', () => this.selectStackInput(sym));
+      inputGrid.appendChild(btn);
+    });
+
+    const topGrid = document.getElementById('stackTopGrid');
+    topGrid.innerHTML = '';
+    this.state.stackAlphabet.forEach(sym => {
+      const btn = document.createElement('button');
+      btn.className = 'symbol-btn stack-btn';
+      btn.textContent = sym;
+      btn.addEventListener('click', () => this.selectStackTop(sym));
+      topGrid.appendChild(btn);
+    });
+
+    document.getElementById('stackModal').classList.add('show');
+  },
+
+  selectStackInput(sym) {
+    this.state.stackModal.input = sym;
+    document.querySelectorAll('#inputSymbolGrid .symbol-btn').forEach(btn => {
+      btn.style.outline = '';
+    });
+    const buttons = document.querySelectorAll('#inputSymbolGrid .symbol-btn');
+    const idx = sym === '' ? 0 : this.state.alphabet.indexOf(sym) + 1;
+    if (buttons[idx]) {
+      buttons[idx].style.outline = `3px solid var(--accent)`;
+      buttons[idx].style.outlineOffset = '2px';
+    }
+  },
+
+  selectStackTop(sym) {
+    this.state.stackModal.stackTop = sym;
+    document.querySelectorAll('#stackTopGrid .symbol-btn').forEach(btn => {
+      btn.style.outline = '';
+    });
+    const buttons = document.querySelectorAll('#stackTopGrid .symbol-btn');
+    const idx = this.state.stackAlphabet.indexOf(sym);
+    if (buttons[idx]) {
+      buttons[idx].style.outline = `3px solid var(--stack)`;
+      buttons[idx].style.outlineOffset = '2px';
+    }
+  },
+
+  closeStackModal() {
+    document.getElementById('stackModal').classList.remove('show');
+  },
+
+  confirmStackTransition() {
+    const { from, to, input, stackTop } = this.state.stackModal;
+    
+    if (input === null) {
+      this.showToast('Selecciona el símbolo de entrada (o ε)', 'error');
+      return;
+    }
+    if (!stackTop) {
+      this.showToast('Selecciona el tope de pila', 'error');
+      return;
+    }
+
+    let replace = document.getElementById('stackReplaceInput').value.trim();
+    if (replace === '' || replace === 'ε') replace = '';
+    
+    if (replace !== '') {
+      const symbols = replace.split('').filter(c => c !== ' ');
+      const invalid = symbols.filter(s => !this.state.stackAlphabet.includes(s));
+      if (invalid.length > 0) {
+        this.showToast(`Símbolos inválidos en reemplazo: ${invalid.join(', ')}`, 'error');
+        return;
+      }
+    }
+
+    const output = document.getElementById('outputInput').value.trim();
+
+    const conflict = this.state.transitions.find(t =>
+      t.from === from && t.stackTop === stackTop &&
+      ((t.input === '' || input === '') || t.input === input)
+    );
+    if (conflict) {
+      const fromState = this.state.states.find(s => s.id === from);
+      this.showToast(`Conflicto de determinismo: ya existe δ(${fromState.label}, ${input || 'ε'}, ${stackTop})`, 'error');
+      return;
+    }
+
+    this.addTransition(from, to, {
+      symbol: input, isEpsilon: input === '',
+      stackTop, stackReplace: replace, output: output || null
+    });
+    this.closeStackModal();
+  },
+
+  addTransition(from, to, data) {
+    const id = this.state.nextTransId++;
+    const trans = { id, from, to, ...data };
+    this.state.transitions.push(trans);
+    this.render();
+    const fromState = this.state.states.find(s => s.id === from);
+    const toState = this.state.states.find(s => s.id === to);
+    if (this.state.automatonType === 'afd') {
+      this.showToast(`δ(${fromState.label}, ${data.symbol}) = ${toState.label}`, 'success');
+    } else {
+      const inS = data.isEpsilon ? 'ε' : data.symbol;
+      const rep = data.stackReplace === '' ? 'ε' : data.stackReplace;
+      this.showToast(`δ(${fromState.label}, ${inS}, ${data.stackTop}) = (${toState.label}, ${rep})`, 'stack');
+    }
+  },
+
+  verifyString() {
+    if (this.state.testing) return;
+    if (this.state.automatonType === 'afd') {
+      this.verifyStringAFD();
+    } else {
+      this.verifyStringAPD();
+    }
+  },
+
+  verifyStringAFD() {
+    const input = document.getElementById('testString').value;
+    const startState = this.state.states.find(s => s.isStart);
+
+    if (!startState) {
+      this.showTestResult('warning', '⚠ Define un estado inicial');
+      return;
+    }
+    if (this.state.alphabet.length === 0) {
+      this.showTestResult('warning', '⚠ Define el alfabeto primero');
+      return;
+    }
+
+    for (const ch of input) {
+      if (!this.state.alphabet.includes(ch)) {
+        this.showTestResult('rejected', `✗ "${ch}" no pertenece al alfabeto`);
+        this.state.currentTestState = startState.id;
+        this.renderCanvas();
+        return;
+      }
+    }
+
+    let current = startState.id;
+    const trace = [{ state: current, symbol: null }];
+
+    for (const ch of input) {
+      const trans = this.state.transitions.find(t => t.from === current && t.symbol === ch);
+      if (!trans) {
+        this.animateTraceAFD(trace, input, 'rejected', `✗ No hay transición δ(${this.state.states.find(s=>s.id===current).label}, ${ch})`);
+        return;
+      }
+      current = trans.to;
+      trace.push({ state: current, symbol: ch, transitionId: trans.id });
+    }
+
+    const finalState = this.state.states.find(s => s.id === current);
+    const result = finalState && finalState.isFinal ? 'accepted' : 'rejected';
+    const msg = result === 'accepted'
+      ? '✓ Cadena aceptada'
+      : `✗ Terminó en ${finalState.label}, que no es final`;
+
+    this.animateTraceAFD(trace, input, result, msg);
+  },
+
+  verifyStringAPD() {
+    const input = document.getElementById('testString').value;
+    const startState = this.state.states.find(s => s.isStart);
+
+    if (!startState) {
+      this.showTestResult('warning', '⚠ Define un estado inicial');
+      return;
+    }
+    if (this.state.alphabet.length === 0) {
+      this.showTestResult('warning', '⚠ Define el alfabeto de entrada');
+      return;
+    }
+    if (!this.state.initialStackSymbol) {
+      this.showTestResult('warning', '⚠ Define Z₀ (símbolo inicial de pila)');
+      return;
+    }
+
+    for (const ch of input) {
+      if (!this.state.alphabet.includes(ch)) {
+        this.showTestResult('rejected', `✗ "${ch}" no pertenece al alfabeto de entrada`);
+        return;
+      }
+    }
+
+    let current = startState.id;
+    let remaining = input;
+    let stack = [this.state.initialStackSymbol];
+    let output = '';
+
+    const trace = [{
+      state: current, symbol: null,
+      remaining: input, stack: [...stack], output: ''
+    }];
+
+    let maxSteps = 200;
+    let stuck = false;
+
+    while (maxSteps-- > 0) {
+      const top = stack[stack.length - 1];
+      let trans = null;
+      
+      if (remaining.length > 0) {
+        const nextSym = remaining[0];
+        trans = this.state.transitions.find(t =>
+          t.from === current && t.stackTop === top && t.symbol === nextSym && !t.isEpsilon
+        );
+      }
+
+      if (!trans) {
+        trans = this.state.transitions.find(t =>
+          t.from === current && t.stackTop === top && t.isEpsilon
+        );
+      }
+
+      if (!trans) {
+        stuck = true;
+        break;
+      }
+
+      const consumedSymbol = trans.isEpsilon ? null : trans.symbol;
+      if (!trans.isEpsilon) {
+        remaining = remaining.slice(1);
+      }
+
+      stack.pop();
+      if (trans.stackReplace && trans.stackReplace !== '') {
+        const toPush = trans.stackReplace.split('').filter(c => c !== ' ');
+        for (let i = toPush.length - 1; i >= 0; i--) {
+          stack.push(toPush[i]);
+        }
+      }
+
+      if (trans.output) output += trans.output;
+      current = trans.to;
+
+      trace.push({
+        state: current, symbol: consumedSymbol,
+        remaining, stack: [...stack], output,
+        transitionId: trans.id
+      });
+
+      if (remaining === '' && this.state.states.find(s => s.id === current).isFinal) {
+        const epsTrans = this.state.transitions.find(t =>
+          t.from === current && t.stackTop === stack[stack.length - 1] && t.isEpsilon
+        );
+        if (!epsTrans) break;
+      }
+
+      if (stack.length === 0) {
+        stuck = true;
+        break;
+      }
+    }
+
+    if (maxSteps <= 0) {
+      this.showTestResult('warning', '⚠ Posible bucle infinito de transiciones ε');
+      return;
+    }
+
+    const finalState = this.state.states.find(s => s.id === current);
+    const accepted = remaining === '' && finalState && finalState.isFinal && !stuck;
+    
+    let msg;
+    if (accepted) {
+      msg = output ? `✓ Cadena aceptada · Salida: ${output}` : '✓ Cadena aceptada';
+    } else if (stuck && remaining === '') {
+      msg = `✗ Sin transición aplicable. Estado ${finalState.label}, tope ${stack[stack.length-1] || '∅'}`;
+    } else if (stuck) {
+      msg = `✗ Sin transición para "${remaining[0]}" con tope ${top}`;
+    } else {
+      msg = `✗ Terminó en ${finalState.label} (no final) o entrada no consumida`;
+    }
+
+    this.animateTraceAPD(trace, accepted ? 'accepted' : 'rejected', msg);
+  },
+
+  animateTraceAFD(trace, input, result, msg) {
+    this.state.testing = true;
+    this.state.currentTestState = null;
+    this.state.activeTransition = null;
+    document.getElementById('testResult').classList.remove('show');
+    document.getElementById('stackVisualWrap').innerHTML = '';
+
+    let i = 0;
+    const step = () => {
+      if (i >= trace.length) {
+        this.showTestResult(result, msg);
+        this.state.testing = false;
+        return;
+      }
+      const t = trace[i];
+      this.state.currentTestState = t.state;
+      if (t.transitionId) this.state.activeTransition = t.transitionId;
+      this.renderTraceAFD(trace, input, i);
+      this.renderCanvas();
+      i++;
+      setTimeout(step, 500);
+    };
+    step();
+  },
+
+  animateTraceAPD(trace, result, msg) {
+    this.state.testing = true;
+    this.state.currentTestState = null;
+    this.state.activeTransition = null;
+    document.getElementById('testResult').classList.remove('show');
+
+    let i = 0;
+    const step = () => {
+      if (i >= trace.length) {
+        this.showTestResult(result, msg);
+        this.state.testing = false;
+        return;
+      }
+      const t = trace[i];
+      this.state.currentTestState = t.state;
+      if (t.transitionId) this.state.activeTransition = t.transitionId;
+      this.renderTraceAPD(trace, i);
+      this.renderStackVisual(t.stack, t.remaining, t.output);
+      this.renderCanvas();
+      i++;
+      setTimeout(step, 700);
+    };
+    step();
+  },
+
+  showTestResult(type, msg) {
+    const el = document.getElementById('testResult');
+    el.textContent = msg;
+    el.className = `test-result show ${type}`;
+  },
+
+  renderTraceAFD(trace, input, currentIdx) {
+    const el = document.getElementById('testTrace');
+    el.innerHTML = '';
+    trace.forEach((t, i) => {
+      const stEl = document.createElement('span');
+      stEl.className = 'trace-state';
+      if (i === currentIdx) stEl.classList.add('current');
+      const st = this.state.states.find(s => s.id === t.state);
+      stEl.textContent = st ? st.label : '?';
+      el.appendChild(stEl);
+
+      if (t.symbol) {
+        const symEl = document.createElement('span');
+        symEl.className = 'trace-symbol';
+        symEl.textContent = t.symbol;
+        el.appendChild(symEl);
+      }
+    });
+  },
+
+  renderTraceAPD(trace, currentIdx) {
+    const el = document.getElementById('testTrace');
+    el.innerHTML = '';
+    trace.forEach((t, i) => {
+      const stEl = document.createElement('span');
+      stEl.className = 'trace-state apd';
+      if (i === currentIdx) stEl.classList.add('current');
+      const st = this.state.states.find(s => s.id === t.state);
+      stEl.textContent = st ? st.label : '?';
+      el.appendChild(stEl);
+
+      if (t.symbol) {
+        const symEl = document.createElement('span');
+        symEl.className = 'trace-symbol apd';
+        symEl.textContent = t.symbol;
+        el.appendChild(symEl);
+      } else if (i < trace.length - 1) {
+        const epsEl = document.createElement('span');
+        epsEl.className = 'trace-symbol apd';
+        epsEl.textContent = 'ε';
+        epsEl.style.opacity = '0.6';
+        el.appendChild(epsEl);
+      }
+    });
+  },
+
+  renderStackVisual(stack, remaining, output) {
+    const wrap = document.getElementById('stackVisualWrap');
+    if (this.state.automatonType !== 'apd') { wrap.innerHTML = ''; return; }
+
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div class="config-row" style="margin-top:8px">
+        <span class="config-label">Entrada restante:</span>
+        <span class="config-value accent">${remaining || 'ε'}</span>
+      </div>
+      ${output ? `
+      <div class="config-row" style="margin-top:6px">
+        <span class="config-label">Salida:</span>
+        <span class="config-value warning">${output}</span>
+      </div>` : ''}
+      <div class="config-row" style="margin-top:6px">
+        <span class="config-label">Pila:</span>
+      </div>
+    `;
+
+    const stackEl = document.createElement('div');
+    stackEl.className = 'stack-visual';
+    
+    if (stack.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'empty';
+      empty.textContent = 'pila vacía';
+      stackEl.appendChild(empty);
+    } else {
+      stack.forEach((sym, idx) => {
+        const cell = document.createElement('div');
+        cell.className = 'stack-cell';
+        if (sym === this.state.initialStackSymbol) cell.classList.add('z0');
+        if (idx === stack.length - 1) cell.classList.add('top');
+        cell.textContent = sym;
+        stackEl.appendChild(cell);
+      });
+    }
+
+    container.appendChild(stackEl);
+    wrap.innerHTML = '';
+    wrap.appendChild(container);
+  },
+
+  clearAll() {
+    this.state.states = [];
+    this.state.transitions = [];
+    this.state.nextId = 1;
+    this.state.nextTransId = 1;
+    this.state.selectedState = null;
+    this.state.connectFrom = null;
+    this.state.currentTestState = null;
+    this.state.activeTransition = null;
+    document.getElementById('testResult').classList.remove('show');
+    document.getElementById('testTrace').innerHTML = '';
+    document.getElementById('stackVisualWrap').innerHTML = '';
+    document.getElementById('testString').value = '';
+    this.updateHint();
+    this.render();
+    this.showToast('Lienzo limpiado', 'success');
+  },
+
+  loadExample() {
+    this.state.states = [];
+    this.state.transitions = [];
+    this.state.nextId = 1;
+    this.state.nextTransId = 1;
+    this.state.currentTestState = null;
+    this.state.activeTransition = null;
+    document.getElementById('testResult').classList.remove('show');
+    document.getElementById('testTrace').innerHTML = '';
+    document.getElementById('stackVisualWrap').innerHTML = '';
+
+    const rect = this.svg.getBoundingClientRect();
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
+
+    if (this.state.automatonType === 'afd') {
+      this.state.alphabet = ['0', '1'];
+      document.getElementById('alphabetInput').value = '0, 1';
+
+      const offset = Math.min(140, rect.width * 0.22);
+      this.state.states = [
+        { id: 1, x: cx - offset, y: cy, label: 'q0', isStart: true, isFinal: true },
+        { id: 2, x: cx + offset, y: cy, label: 'q1', isStart: false, isFinal: false }
+      ];
+      this.state.transitions = [
+        { id: 1, from: 1, to: 1, symbol: '0' },
+        { id: 2, from: 2, to: 2, symbol: '0' },
+        { id: 3, from: 1, to: 2, symbol: '1' },
+        { id: 4, from: 2, to: 1, symbol: '1' }
+      ];
+      this.state.nextId = 3;
+      this.state.nextTransId = 5;
+      
+      // Cadena de ejemplo predeterminada
+      document.getElementById('testString').value = '110011';
+      this.showToast('Ejemplo: AFD con número par de 1s', 'success');
+    } else {
+      this.state.alphabet = ['a', 'b'];
+      this.state.stackAlphabet = ['A', 'Z'];
+      this.state.initialStackSymbol = 'Z';
+      document.getElementById('alphabetInput').value = 'a, b';
+      document.getElementById('stackAlphabetInput').value = 'A, Z';
+      document.getElementById('initialStackInput').value = 'Z';
+
+      const offsetX = Math.min(160, rect.width * 0.22);
+      const offsetY = Math.min(80, rect.height * 0.18);
+
+      this.state.states = [
+        { id: 1, x: cx - offsetX, y: cy - offsetY, label: 'q0', isStart: true, isFinal: false },
+        { id: 2, x: cx, y: cy - offsetY, label: 'q1', isStart: false, isFinal: false },
+        { id: 3, x: cx + offsetX, y: cy - offsetY, label: 'q2', isStart: false, isFinal: false },
+        { id: 4, x: cx + offsetX, y: cy + offsetY, label: 'q3', isStart: false, isFinal: true }
+      ];
+      this.state.transitions = [
+        { id: 1, from: 1, to: 2, symbol: 'a', isEpsilon: false, stackTop: 'Z', stackReplace: 'AZ', output: null },
+        { id: 2, from: 2, to: 2, symbol: 'a', isEpsilon: false, stackTop: 'A', stackReplace: 'AA', output: null },
+        { id: 3, from: 2, to: 3, symbol: 'b', isEpsilon: false, stackTop: 'A', stackReplace: '', output: null },
+        { id: 4, from: 3, to: 3, symbol: 'b', isEpsilon: false, stackTop: 'A', stackReplace: '', output: null },
+        { id: 5, from: 3, to: 4, symbol: '', isEpsilon: true, stackTop: 'Z', stackReplace: 'Z', output: null }
+      ];
+      this.state.nextId = 5;
+      this.state.nextTransId = 6;
+      
+      // Cadena de ejemplo predeterminada
+      document.getElementById('testString').value = 'aabb';
+      this.showToast('Ejemplo: APD que reconoce aⁿbⁿ con n > 0', 'stack');
+    }
+
+    this.updateHint();
+    this.render();
+  },
+
+  showToast(msg, type = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast show ${type}`;
+    clearTimeout(this._toastTimer);
+    this._toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+  },
+
+  render() {
+    this.renderStateList();
+    this.renderTransList();
+    this.renderCanvas();
+    document.getElementById('canvasHint').classList.toggle('hidden', this.state.states.length > 0);
+    document.getElementById('stateCount').textContent = this.state.states.length;
+    document.getElementById('transCount').textContent = this.state.transitions.length;
+  },
+
+  renderStateList() {
+    const list = document.getElementById('statesList');
+    if (this.state.states.length === 0) {
+      list.innerHTML = '<p class="empty">Sin estados todavía</p>';
+      return;
+    }
+    list.innerHTML = '';
+    this.state.states.forEach(s => {
+      const item = document.createElement('div');
+      item.className = 'state-item';
+
+      const badge = document.createElement('div');
+      badge.className = 'badge';
+      badge.textContent = s.label;
+      item.appendChild(badge);
+
+      const tags = document.createElement('div');
+      tags.className = 'tags';
+      if (s.isStart) {
+        const t = document.createElement('span');
+        t.className = 'tag start';
+        t.textContent = 'Inicio';
+        tags.appendChild(t);
+      }
+      if (s.isFinal) {
+        const t = document.createElement('span');
+        t.className = 'tag final';
+        t.textContent = 'Final';
+        tags.appendChild(t);
+      }
+      item.appendChild(tags);
+
+      const actions = document.createElement('div');
+      actions.className = 'state-actions';
+
+      const startBtn = document.createElement('button');
+      startBtn.className = 'icon-btn' + (s.isStart ? ' active' : '');
+      startBtn.title = 'Marcar como inicial';
+      startBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+      startBtn.addEventListener('click', () => this.setStart(s.id));
+      actions.appendChild(startBtn);
+
+      const finalBtn = document.createElement('button');
+      finalBtn.className = 'icon-btn' + (s.isFinal ? ' active final-btn' : '');
+      finalBtn.title = 'Alternar final';
+      finalBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="5"/></svg>';
+      finalBtn.addEventListener('click', () => this.toggleFinal(s.id));
+      actions.appendChild(finalBtn);
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'icon-btn';
+      delBtn.title = 'Eliminar';
+      delBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2M6 6l1 14a2 2 0 002 2h6a2 2 0 002-2l1-14"/></svg>';
+      delBtn.addEventListener('click', () => this.deleteState(s.id));
+      actions.appendChild(delBtn);
+
+      item.appendChild(actions);
+      list.appendChild(item);
+    });
+  },
+
+  renderTransList() {
+    const list = document.getElementById('transList');
+    if (this.state.transitions.length === 0) {
+      list.innerHTML = '<p class="empty">Sin transiciones todavía</p>';
+      return;
+    }
+    list.innerHTML = '';
+    this.state.transitions.forEach(t => {
+      const from = this.state.states.find(s => s.id === t.from);
+      const to = this.state.states.find(s => s.id === t.to);
+      if (!from || !to) return;
+
+      const item = document.createElement('div');
+      item.className = 'trans-item';
+
+      const row = document.createElement('div');
+      row.className = 'trans-row';
+
+      const fromSpan = document.createElement('span');
+      fromSpan.className = 'trans-from';
+      fromSpan.textContent = from.label;
+      row.appendChild(fromSpan);
+
+      const arrow = document.createElement('span');
+      arrow.className = 'trans-arrow';
+      arrow.textContent = '→';
+      row.appendChild(arrow);
+
+      const toSpan = document.createElement('span');
+      toSpan.className = 'trans-to';
+      toSpan.textContent = to.label;
+      row.appendChild(toSpan);
+
+      if (this.state.automatonType === 'afd') {
+        const symSpan = document.createElement('span');
+        symSpan.className = 'trans-detail';
+        symSpan.style.background = 'var(--accent-soft)';
+        symSpan.style.color = 'var(--accent)';
+        symSpan.style.borderColor = 'var(--accent)';
+        symSpan.textContent = t.symbol;
+        row.appendChild(symSpan);
+      } else {
+        const inS = t.isEpsilon ? 'ε' : t.symbol;
+        const rep = t.stackReplace === '' ? 'ε' : t.stackReplace;
+        const detail = document.createElement('span');
+        detail.className = 'trans-detail';
+        detail.textContent = `${inS}, ${t.stackTop}/${rep}`;
+        row.appendChild(detail);
+
+        if (t.output) {
+          const out = document.createElement('span');
+          out.className = 'trans-output';
+          out.textContent = `→ ${t.output}`;
+          row.appendChild(out);
+        }
+      }
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'trans-delete';
+      delBtn.title = 'Eliminar transición';
+      delBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2M6 6l1 14a2 2 0 002 2h6a2 2 0 002-2l1-14"/></svg>';
+      delBtn.addEventListener('click', () => this.deleteTransition(t.id));
+      row.appendChild(delBtn);
+
+      item.appendChild(row);
+      list.appendChild(item);
+    });
+  },
+
+  renderCanvas() {
+    this.edgesGroup.innerHTML = '';
+    this.statesGroup.innerHTML = '';
+    this.state.transitions.forEach(t => this.renderEdge(t));
+    this.state.states.forEach(s => this.renderState(s));
+  },
+
+  renderEdge(t) {
+    const from = this.state.states.find(s => s.id === t.from);
+    const to = this.state.states.find(s => s.id === t.to);
+    if (!from || !to) return;
+
+    const r = 28;
+    const NS = 'http://www.w3.org/2000/svg';
+    const g = document.createElementNS(NS, 'g');
+    g.classList.add('edge-group');
+    g.dataset.id = t.id;
+
+    const samePair = this.state.transitions.filter(rt =>
+      (rt.from === t.from && rt.to === t.to) || (rt.from === t.to && rt.to === t.from)
+    );
+    const pairIndex = samePair.findIndex(rt => rt.id === t.id);
+    const hasReverse = this.state.transitions.some(rt => rt.from === t.to && rt.to === t.from);
+
+    let d, midX, midY;
+
+    if (t.from === t.to) {
+      const x = from.x;
+      const y = from.y;
+      d = `M ${x - 10} ${y - r + 4} C ${x - 42} ${y - r - 32}, ${x + 42} ${y - r - 32}, ${x + 10} ${y - r + 4}`;
+      midX = x;
+      midY = y - r - 18;
+    } else {
+      const dx = to.x - from.x;
+      const dy = to.y - from.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+      const ux = dx / dist;
+      const uy = dy / dist;
+      const sx = from.x + ux * r;
+      const sy = from.y + uy * r;
+      const ex = to.x - ux * r;
+      const ey = to.y - uy * r;
+
+      if (hasReverse || samePair.length > 1) {
+        const totalCurves = samePair.length;
+        const baseOffset = hasReverse ? 38 : 0;
+        const spread = samePair.length > 1 ? (pairIndex - (totalCurves - 1) / 2) * 30 : 0;
+        const offset = baseOffset + spread;
+        const nx = -uy;
+        const ny = ux;
+        const cpx = (sx + ex) / 2 + nx * offset;
+        const cpy = (sy + ey) / 2 + ny * offset;
+        d = `M ${sx} ${sy} Q ${cpx} ${cpy} ${ex} ${ey}`;
+        midX = 0.25 * sx + 0.5 * cpx + 0.25 * ex;
+        midY = 0.25 * sy + 0.5 * cpy + 0.25 * ey;
+      } else {
+        d = `M ${sx} ${sy} L ${ex} ${ey}`;
+        midX = (sx + ex) / 2;
+        midY = (sy + ey) / 2;
+      }
+    }
+
+    const isActive = this.state.activeTransition === t.id;
+    const isAPD = this.state.automatonType === 'apd';
+
+    const path = document.createElementNS(NS, 'path');
+    path.setAttribute('d', d);
+    path.classList.add('edge-path');
+    if (isActive) {
+      path.classList.add('is-active');
+      if (isAPD) path.classList.add('apd');
+    }
+    let marker = 'url(#arrow-default)';
+    if (isActive) marker = isAPD ? 'url(#arrow-active-stack)' : 'url(#arrow-active)';
+    path.setAttribute('marker-end', marker);
+    g.appendChild(path);
+
+    const hit = document.createElementNS(NS, 'path');
+    hit.setAttribute('d', d);
+    hit.classList.add('edge-hit');
+    g.appendChild(hit);
+
+    let label = '';
+    if (isAPD) {
+      const inS = t.isEpsilon ? 'ε' : t.symbol;
+      const rep = t.stackReplace === '' ? 'ε' : t.stackReplace;
+      label = `${inS}, ${t.stackTop}/${rep}`;
+      if (t.output) label += `, ${t.output}`;
+    } else {
+      label = t.symbol;
+    }
+
+    const labelW = label.length * 7 + 14;
+    const labelBg = document.createElementNS(NS, 'rect');
+    labelBg.setAttribute('x', midX - labelW / 2);
+    labelBg.setAttribute('y', midY - 10);
+    labelBg.setAttribute('width', labelW);
+    labelBg.setAttribute('height', 20);
+    labelBg.setAttribute('rx', 10);
+    labelBg.classList.add('edge-label-bg');
+    g.appendChild(labelBg);
+
+    const labelEl = document.createElementNS(NS, 'text');
+    labelEl.setAttribute('x', midX);
+    labelEl.setAttribute('y', midY);
+    labelEl.classList.add('edge-label');
+    if (isAPD) labelEl.classList.add('apd');
+    labelEl.textContent = label;
+    g.appendChild(labelEl);
+
+    this.edgesGroup.appendChild(g);
+  },
+
+  renderState(s) {
+    const r = 28;
+    const NS = 'http://www.w3.org/2000/svg';
+    const g = document.createElementNS(NS, 'g');
+    g.classList.add('state-node');
+    if (this.state.automatonType === 'apd') g.classList.add('apd');
+    g.dataset.id = s.id;
+    g.setAttribute('transform', `translate(${s.x}, ${s.y})`);
+
+    if (s.isStart) g.classList.add('is-start');
+    if (s.isFinal) g.classList.add('is-final');
+    if (this.state.selectedState === s.id) g.classList.add('is-selected');
+    if (this.state.connectFrom === s.id) g.classList.add('connecting-source');
+    if (this.state.currentTestState === s.id) g.classList.add('current');
+
+    if (s.isStart) {
+      const arrow = document.createElementNS(NS, 'path');
+      arrow.setAttribute('d', `M ${-r - 22} 0 L ${-r - 4} 0`);
+      arrow.classList.add('state-start-arrow');
+      if (this.state.automatonType === 'apd') arrow.classList.add('apd');
+      arrow.setAttribute('marker-end',
+        this.state.automatonType === 'apd' ? 'url(#arrow-start-stack)' : 'url(#arrow-start)');
+      g.appendChild(arrow);
+    }
+
+    const circle = document.createElementNS(NS, 'circle');
+    circle.setAttribute('cx', 0);
+    circle.setAttribute('cy', 0);
+    circle.setAttribute('r', r);
+    circle.classList.add('state-circle');
+    g.appendChild(circle);
+
+    if (s.isFinal) {
+      const ring = document.createElementNS(NS, 'circle');
+      ring.setAttribute('cx', 0);
+      ring.setAttribute('cy', 0);
+      ring.setAttribute('r', r - 6);
+      ring.classList.add('state-final-ring');
+      g.appendChild(ring);
+    }
+
+    const text = document.createElementNS(NS, 'text');
+    text.classList.add('state-label');
+    text.textContent = s.label;
+    g.appendChild(text);
+
+    this.statesGroup.appendChild(g);
+  }
+};
+
+document.addEventListener('DOMContentLoaded', () => App.init());
+</script>
+</body>
+</html>
