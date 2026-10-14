@@ -33,8 +33,22 @@
   .app-header { padding: 0 12px; gap: 8px; }
 }
 
+.lbl-short { display: none; }
+
+/* Celulares: el header no entra con nombre + rótulos largos + 3 botones */
+@media (max-width: 520px) {
+  .logo-text { display: none; }
+  .lbl-long { display: none; }
+  .lbl-short { display: inline; }
+  .type-btn { padding: 6px 14px; }
+  .header-center { justify-content: center; }
+}
+
 @media (max-width: 380px) {
   .panel { padding: 10px; }
   .panel-section { padding: 10px; }
   .type-btn { padding: 6px 10px; font-size: 11px; }
+  .app-header { gap: 6px; }
+  .header-actions { gap: 6px; }
+  .header-actions .btn { padding: 7px; }
 }

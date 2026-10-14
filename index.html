@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="css/canvas.css">
 <link rel="stylesheet" href="css/panel.css">
 <link rel="stylesheet" href="css/modals.css">
+<link rel="stylesheet" href="css/help.css">
 <link rel="stylesheet" href="css/responsive.css">
 <script type="module" src="js/main.js"></script>
 </head>
@@ -29,11 +30,15 @@
     <div class="header-center">
       <div class="type-toggle">
         <button class="type-btn active" data-type="afd">AFD</button>
-        <button class="type-btn" data-type="apd">Pila (APD)</button>
-        <button class="type-btn" data-type="mt">Turing (MT)</button>
+        <button class="type-btn" data-type="apd"><span class="lbl-long">Pila (APD)</span><span class="lbl-short">APD</span></button>
+        <button class="type-btn" data-type="mt"><span class="lbl-long">Turing (MT)</span><span class="lbl-short">MT</span></button>
       </div>
     </div>
     <div class="header-actions">
+      <button class="btn" id="btnHelp" aria-haspopup="dialog" title="Ayuda: tutorial y contacto">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 015.8 1c0 2-3 3-3 3M12 17h.01"/></svg>
+        <span>Ayuda</span>
+      </button>
       <button class="btn" id="btnExample">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
         <span>Ejemplo</span>
@@ -146,21 +151,21 @@
       <p class="hint">C = Σ ∪ {<code>B</code>} ∪ auxiliares, con <code>B</code> el blanco. La entrada va en la cinta 1; las demás arrancan en blanco. Movimientos: <code>I</code> izquierda, <code>D</code> derecha, <code>N</code> no mueve.</p>
     </section>
 
-    <section class="panel-section">
+    <section class="panel-section" id="statesSection">
       <h3>Estados (Q) <span class="counter" id="stateCount">0</span></h3>
       <div class="list" id="statesList">
         <p class="empty">Sin estados todavía</p>
       </div>
     </section>
 
-    <section class="panel-section">
+    <section class="panel-section" id="transSection">
       <h3>Transiciones (δ) <span class="counter" id="transCount">0</span></h3>
       <div class="list" id="transList">
         <p class="empty">Sin transiciones todavía</p>
       </div>
     </section>
 
-    <section class="panel-section">
+    <section class="panel-section" id="verifySection">
       <h3>Verificar cadena</h3>
       <div class="test-input-row">
         <input type="text" id="testString" class="input mono" placeholder="aabb">
@@ -234,6 +239,85 @@
     <div class="modal-actions">
       <button class="btn" id="tapeModalCancel">Cancelar</button>
       <button class="btn btn-tape" id="tapeModalConfirm">Crear transición</button>
+    </div>
+  </div>
+</div>
+
+<!-- Ayuda: pestañas Tutorial (recorrido guiado) y Contacto -->
+<div class="modal help-modal" id="helpModal">
+  <div class="modal-content help-content" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="help-head">
+      <h3 id="helpTitle">Ayuda</h3>
+      <button class="icon-btn" id="helpClose" aria-label="Cerrar ayuda">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="help-tabs" role="tablist">
+      <button class="help-tab active" role="tab" id="tabTour" aria-selected="true" aria-controls="panelTour">Tutorial</button>
+      <button class="help-tab" role="tab" id="tabContact" aria-selected="false" aria-controls="panelContact" tabindex="-1">Contacto</button>
+    </div>
+
+    <div class="help-panel" role="tabpanel" id="panelTour" aria-labelledby="tabTour">
+      <p class="help-lead">Un recorrido por la página, paso a paso: cómo moverte por el tablero, crear estados y transiciones, cargar los alfabetos y verificar una cadena.</p>
+
+      <div class="device-pick">
+        <span class="device-label" id="deviceLabel">Recorrido para</span>
+        <div class="seg" role="radiogroup" aria-labelledby="deviceLabel">
+          <button class="seg-btn" role="radio" data-device="desktop">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            Computadora
+          </button>
+          <button class="seg-btn" role="radio" data-device="touch">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg>
+            Celular / tablet
+          </button>
+        </div>
+        <p class="hint" id="deviceHint"></p>
+      </div>
+
+      <button class="btn btn-primary btn-block btn-lg" id="btnStartTour">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+        Reproducir tutorial
+      </button>
+    </div>
+
+    <div class="help-panel" role="tabpanel" id="panelContact" aria-labelledby="tabContact" hidden>
+      <p class="help-lead">¿Encontraste un error o tienes una sugerencia? Escríbeme y te respondo al correo que dejes.</p>
+
+      <form id="contactForm" class="contact-form" novalidate>
+        <div class="label-input">
+          <label for="contactEmail">Tu correo</label>
+          <input type="email" id="contactEmail" name="email" class="input" placeholder="nombre@ejemplo.com" autocomplete="email" inputmode="email" maxlength="120" required>
+        </div>
+        <div class="label-input">
+          <label for="contactReason">Motivo</label>
+          <input type="text" id="contactReason" name="motivo" class="input" list="contactReasons" placeholder="Reportar un error, sugerencia…" maxlength="80" required>
+          <datalist id="contactReasons">
+            <option value="Reportar un error">
+            <option value="Sugerencia">
+            <option value="Consulta sobre el uso">
+            <option value="Consulta sobre la teoría">
+          </datalist>
+        </div>
+        <div class="label-input">
+          <label for="contactMessage">Mensaje</label>
+          <textarea id="contactMessage" name="mensaje" class="input" rows="5" maxlength="600" placeholder="Si es un error, cuéntame qué hiciste y qué esperabas que pasara." required aria-describedby="contactCount"></textarea>
+          <span class="char-count" id="contactCount" aria-live="polite">0 / 600</span>
+        </div>
+        <!-- Trampa para bots: los humanos no la ven -->
+        <input type="text" name="_honey" class="honey" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <p class="form-error" id="contactError" role="alert"></p>
+        <button type="submit" class="btn btn-primary btn-block btn-lg" id="contactSubmit">Enviar mensaje</button>
+        <p class="hint">Junto al mensaje se envía el tipo de autómata abierto y el dispositivo, para poder reproducir errores.</p>
+      </form>
+
+      <div class="contact-sent" id="contactSent" hidden>
+        <svg width="40" height="40" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="24" cy="24" r="20"/><circle cx="24" cy="24" r="14"/><path d="M17 24l5 5 9-10" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <h4>Mensaje enviado</h4>
+        <p>Te respondo a <strong id="contactSentTo"></strong>.</p>
+        <button class="btn" id="contactAgain">Escribir otro mensaje</button>
+      </div>
     </div>
   </div>
 </div>
