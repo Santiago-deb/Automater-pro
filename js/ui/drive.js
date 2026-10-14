@@ -5,7 +5,7 @@
 import { validAutomaton } from './files.js';
 
 // OAuth Client ID de Google Cloud, tipo "Aplicación web" (es público, no es un secreto).
-const CLIENT_ID = '';
+const CLIENT_ID = '966670316238-q883sd6gakuifo35jsom5otoqf0h5e3m.apps.googleusercontent.com';
 const SCOPE = 'https://www.googleapis.com/auth/drive.file';
 const API = 'https://www.googleapis.com/drive/v3';
 const UPLOAD = 'https://www.googleapis.com/upload/drive/v3/files';
