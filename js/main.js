@@ -9,11 +9,12 @@ import { modals } from './ui/modals.js';
 import { tapeView } from './ui/tape.js';
 import { help } from './ui/help.js';
 import { tour } from './ui/tour.js';
+import { files } from './ui/files.js';
 
 const $ = id => document.getElementById(id);
 const parseList = value => value.split(',').map(s => s.trim()).filter(s => s.length > 0);
 
-const App = Object.assign({ state: createState() }, actions, interaction, canvas, panel, modals, tapeView, help, tour, {
+const App = Object.assign({ state: createState() }, actions, interaction, canvas, panel, modals, tapeView, help, tour, files, {
   init() {
     this.svg = $('canvas');
     this.viewport = $('viewport');
@@ -22,7 +23,8 @@ const App = Object.assign({ state: createState() }, actions, interaction, canvas
 
     this.bindEvents();
     this.bindHelp();
-    this.loadExample();
+    this.bindFileMenu();
+    this.restoreSession();
     this.updateHint();
     this.render();
   },
@@ -58,7 +60,7 @@ const App = Object.assign({ state: createState() }, actions, interaction, canvas
     on('btnVerify', 'click', () => this.verifyString());
     on('testString', 'keypress', e => { if (e.key === 'Enter') this.verifyString(); });
     on('btnClear', 'click', () => this.clearAll());
-    on('btnExample', 'click', () => this.loadExample());
+    on('btnExample', 'click', () => { this.remember(); this.loadExample(); this.toastWithUndo('Se cargó el ejemplo'); });
 
     // Modales (clic en el fondo o Escape los cierra)
     on('modalCancel', 'click', () => this.closeSymbolModal());

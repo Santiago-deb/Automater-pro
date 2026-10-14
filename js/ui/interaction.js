@@ -130,6 +130,7 @@ export const interaction = {
     }
     // Evita que el click que sigue a un arrastre seleccione/alterne el estado
     if (this.state.pendingDrag?.active) {
+      this.scheduleSave(); // la posición nueva también se guarda
       this.state.suppressClick = true;
       setTimeout(() => { this.state.suppressClick = false; }, 50);
     }

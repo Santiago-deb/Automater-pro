@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="css/panel.css">
 <link rel="stylesheet" href="css/modals.css">
 <link rel="stylesheet" href="css/help.css">
+<link rel="stylesheet" href="css/files.css">
 <link rel="stylesheet" href="css/responsive.css">
 <script type="module" src="js/main.js"></script>
 </head>
@@ -35,6 +36,25 @@
       </div>
     </div>
     <div class="header-actions">
+      <div class="menu-wrap">
+        <button class="btn" id="btnFile" aria-haspopup="menu" aria-expanded="false" aria-controls="fileMenu" title="Nuevo, abrir, guardar y exportar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+          <span>Archivo</span>
+        </button>
+        <div class="menu" id="fileMenu" role="menu" hidden>
+          <button role="menuitem" data-file="new">Nuevo (tablero vacío)</button>
+          <button role="menuitem" data-file="example">Cargar ejemplo</button>
+          <hr>
+          <button role="menuitem" data-file="open">Abrir archivo…</button>
+          <button role="menuitem" data-file="save">Guardar archivo</button>
+          <hr>
+          <button role="menuitem" data-file="print">Exportar imagen para imprimir <small>PNG, fondo blanco</small></button>
+          <button role="menuitem" data-file="png">Exportar imagen <small>PNG, como se ve</small></button>
+          <button role="menuitem" data-file="svg">Exportar SVG <small>vectorial, fondo blanco</small></button>
+          <p class="menu-note">Tu trabajo se guarda solo en este navegador.</p>
+        </div>
+        <input type="file" id="fileInput" accept=".json,application/json" hidden>
+      </div>
       <button class="btn" id="btnHelp" aria-haspopup="dialog" title="Ayuda: tutorial y contacto">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 015.8 1c0 2-3 3-3 3M12 17h.01"/></svg>
         <span>Ayuda</span>

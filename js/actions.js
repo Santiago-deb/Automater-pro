@@ -25,6 +25,12 @@ export const actions = {
 
   switchType(type) {
     if (this.state.automatonType === type) return;
+    this.setTypeUI(type);
+    this.restoreOrExample();
+  },
+
+  // Cambia el tipo activo y la interfaz, sin tocar el autómata.
+  setTypeUI(type) {
     this.state.automatonType = type;
     setTheme(document.body, type);
     document.querySelectorAll('.type-btn').forEach(btn => {
@@ -35,7 +41,7 @@ export const actions = {
     $('tapeSection').style.display = type === 'mt' ? 'block' : 'none';
     document.querySelectorAll('.tool-btn.active').forEach(btn => setTheme(btn, type));
     setTheme($('hintPulse'), type);
-    this.loadExample();
+    this.clearTestOutput();
   },
 
   setMode(mode) {
@@ -176,13 +182,14 @@ export const actions = {
   },
 
   clearAll() {
+    this.remember();
     this.resetAutomaton();
     this.state.selectedState = null;
     this.state.connectFrom = null;
     $('testString').value = '';
     this.updateHint();
     this.render();
-    this.showToast('Lienzo limpiado', 'success');
+    this.toastWithUndo('Lienzo limpiado');
   },
 
   loadExample() {
