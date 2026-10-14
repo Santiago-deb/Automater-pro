@@ -42,6 +42,7 @@ export const panel = {
     $('canvasHint').classList.toggle('hidden', this.state.states.length > 0);
     $('stateCount').textContent = this.state.states.length;
     $('transCount').textContent = this.state.transitions.length;
+    this.scheduleSave();
   },
 
   updateHint() {
@@ -50,12 +51,18 @@ export const panel = {
       : HINTS[this.state.mode];
   },
 
-  showToast(msg, type = '') {
+  // `action` = { label, run } agrega un botón (p. ej. Deshacer) y deja el toast más tiempo.
+  showToast(msg, type = '', action = null) {
     const t = $('toast');
     t.textContent = msg;
-    t.className = `toast show ${type}`;
+    t.className = `toast show ${type}${action ? ' has-action' : ''}`;
+    if (action) {
+      const btn = el('button', 'toast-action', action.label);
+      btn.addEventListener('click', () => { t.classList.remove('show'); action.run(); });
+      t.appendChild(btn);
+    }
     clearTimeout(this._toastTimer);
-    this._toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+    this._toastTimer = setTimeout(() => t.classList.remove('show'), action ? 6000 : 2800);
   },
 
   showTestResult(type, msg) {

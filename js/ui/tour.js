@@ -16,7 +16,7 @@ const STEPS = [
   {
     target: '.type-toggle',
     title: 'Elige el tipo de máquina',
-    text: 'AFD, autómata de pila (APD) o Máquina de Turing (MT). Al cambiar de tipo se carga un ejemplo listo para probar.'
+    text: 'AFD, autómata de pila (APD) o Máquina de Turing (MT). Cada tipo guarda su propio trabajo: si cambias y vuelves, sigue ahí (la primera vez aparece un ejemplo listo para probar).'
   },
   {
     target: '.canvas-area',
@@ -100,9 +100,14 @@ const STEPS = [
     }
   },
   {
+    target: '#btnFile',
+    title: 'Archivo',
+    text: 'Empezar de cero, abrir o guardar tu autómata como archivo, y exportar el diagrama como imagen (también con fondo blanco, para imprimir la entrega).'
+  },
+  {
     target: ['#btnExample', '#btnClear'],
     title: 'Ejemplo y Limpiar',
-    text: 'Ejemplo carga una máquina ya armada del tipo elegido. Limpiar vacía el tablero para empezar desde cero.'
+    text: 'Ejemplo carga una máquina ya armada del tipo elegido. Limpiar vacía el tablero para empezar desde cero. Los dos se pueden deshacer desde el aviso que aparece abajo.'
   },
   {
     target: '#btnHelp',
