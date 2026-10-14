@@ -1,0 +1,184 @@
+// Panel lateral: listas de estados/transiciones, resultado de la prueba,
+// traza, pila visual, toasts y hint del lienzo.
+import { apdLabel } from '../engine/apd.js';
+
+const $ = id => document.getElementById(id);
+
+const ICONS = {
+  start: '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
+  final: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="5"/></svg>',
+  trash: size => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2M6 6l1 14a2 2 0 002 2h6a2 2 0 002-2l1-14"/></svg>`
+};
+
+const HINTS = {
+  select: 'Arrastra los estados para moverlos · clic para seleccionar',
+  add: 'Haz clic en el lienzo para agregar · clic en estado alterna final',
+  connect: 'Clic en estado origen, luego en destino (mismo estado = bucle)',
+  delete: 'Clic en estado o transición para eliminarlo'
+};
+
+// Crea un elemento HTML. `text` siempre va como textContent (nunca HTML).
+function el(tag, className = '', text = '') {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text) node.textContent = text;
+  return node;
+}
+
+function iconButton(className, title, svg, onClick) {
+  const btn = el('button', className);
+  btn.title = title;
+  btn.innerHTML = svg;
+  btn.addEventListener('click', onClick);
+  return btn;
+}
+
+export const panel = {
+  render() {
+    this.renderStateList();
+    this.renderTransList();
+    this.renderCanvas();
+    $('canvasHint').classList.toggle('hidden', this.state.states.length > 0);
+    $('stateCount').textContent = this.state.states.length;
+    $('transCount').textContent = this.state.transitions.length;
+  },
+
+  updateHint() {
+    $('hintText').textContent = this.state.states.length === 0
+      ? 'Selecciona "Agregar estado" y haz clic en el lienzo'
+      : HINTS[this.state.mode];
+  },
+
+  showToast(msg, type = '') {
+    const t = $('toast');
+    t.textContent = msg;
+    t.className = `toast show ${type}`;
+    clearTimeout(this._toastTimer);
+    this._toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+  },
+
+  showTestResult(type, msg) {
+    const r = $('testResult');
+    r.textContent = msg;
+    r.className = `test-result show ${type}`;
+  },
+
+  clearTestOutput() {
+    $('testResult').classList.remove('show');
+    $('testTrace').innerHTML = '';
+    $('stackVisualWrap').innerHTML = '';
+  },
+
+  renderStateList() {
+    const list = $('statesList');
+    if (this.state.states.length === 0) {
+      list.innerHTML = '<p class="empty">Sin estados todavía</p>';
+      return;
+    }
+    list.innerHTML = '';
+    this.state.states.forEach(s => {
+      const item = el('div', 'state-item');
+      item.appendChild(el('div', 'badge', s.label));
+
+      const tags = el('div', 'tags');
+      if (s.isStart) tags.appendChild(el('span', 'tag start', 'Inicio'));
+      if (s.isFinal) tags.appendChild(el('span', 'tag final', 'Final'));
+      item.appendChild(tags);
+
+      const actions = el('div', 'state-actions');
+      actions.append(
+        iconButton('icon-btn' + (s.isStart ? ' active' : ''), 'Marcar como inicial', ICONS.start, () => this.setStart(s.id)),
+        iconButton('icon-btn' + (s.isFinal ? ' active final-btn' : ''), 'Alternar final', ICONS.final, () => this.toggleFinal(s.id)),
+        iconButton('icon-btn', 'Eliminar', ICONS.trash(13), () => this.deleteState(s.id))
+      );
+      item.appendChild(actions);
+      list.appendChild(item);
+    });
+  },
+
+  renderTransList() {
+    const list = $('transList');
+    if (this.state.transitions.length === 0) {
+      list.innerHTML = '<p class="empty">Sin transiciones todavía</p>';
+      return;
+    }
+    list.innerHTML = '';
+    this.state.transitions.forEach(t => {
+      const from = this.getState(t.from);
+      const to = this.getState(t.to);
+      if (!from || !to) return;
+
+      const row = el('div', 'trans-row');
+      row.append(el('span', 'trans-from', from.label), el('span', 'trans-arrow', '→'), el('span', 'trans-to', to.label));
+
+      if (this.state.automatonType === 'afd') {
+        const sym = el('span', 'trans-detail', t.symbol);
+        Object.assign(sym.style, { background: 'var(--accent-soft)', color: 'var(--accent)', borderColor: 'var(--accent)' });
+        row.appendChild(sym);
+      } else {
+        row.appendChild(el('span', 'trans-detail', apdLabel(t)));
+        if (t.output) row.appendChild(el('span', 'trans-output', `→ ${t.output}`));
+      }
+
+      row.appendChild(iconButton('trans-delete', 'Eliminar transición', ICONS.trash(12), () => this.deleteTransition(t.id)));
+
+      const item = el('div', 'trans-item');
+      item.appendChild(row);
+      list.appendChild(item);
+    });
+  },
+
+  // Traza "q0 q1 1 q0 1 ..." con el paso actual resaltado.
+  renderTrace(trace, currentIdx) {
+    const isAPD = this.state.automatonType === 'apd';
+    const cls = isAPD ? ' apd' : '';
+    const wrap = $('testTrace');
+    wrap.innerHTML = '';
+    trace.forEach((t, i) => {
+      const st = this.getState(t.state);
+      const stEl = el('span', 'trace-state' + cls + (i === currentIdx ? ' current' : ''), st ? st.label : '?');
+      wrap.appendChild(stEl);
+
+      if (t.symbol) {
+        wrap.appendChild(el('span', 'trace-symbol' + cls, t.symbol));
+      } else if (isAPD && i < trace.length - 1) {
+        const eps = el('span', 'trace-symbol apd', 'ε');
+        eps.style.opacity = '0.6';
+        wrap.appendChild(eps);
+      }
+    });
+  },
+
+  renderStackVisual({ stack, remaining, output }) {
+    const wrap = $('stackVisualWrap');
+    wrap.innerHTML = '';
+    if (this.state.automatonType !== 'apd') return;
+
+    const configRow = (label, value, valueClass, marginTop) => {
+      const row = el('div', 'config-row');
+      row.style.marginTop = marginTop;
+      row.appendChild(el('span', 'config-label', label));
+      if (value !== undefined) row.appendChild(el('span', `config-value ${valueClass}`, value));
+      return row;
+    };
+
+    const container = el('div');
+    container.appendChild(configRow('Entrada restante:', remaining || 'ε', 'accent', '8px'));
+    if (output) container.appendChild(configRow('Salida:', output, 'warning', '6px'));
+    container.appendChild(configRow('Pila:', undefined, '', '6px'));
+
+    const stackEl = el('div', 'stack-visual');
+    if (stack.length === 0) {
+      stackEl.appendChild(el('div', 'empty', 'pila vacía'));
+    } else {
+      stack.forEach((sym, idx) => {
+        const cell = el('div', 'stack-cell', sym);
+        if (sym === this.state.initialStackSymbol) cell.classList.add('z0');
+        if (idx === stack.length - 1) cell.classList.add('top');
+        stackEl.appendChild(cell);
+      });
+    }
+    container.appendChild(stackEl);
+    wrap.appendChild(container);
+  }
+};
