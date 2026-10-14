@@ -55,3 +55,13 @@
   .menu { position: fixed; top: 60px; right: 8px; left: 8px; min-width: 0; }
   .menu button { padding: 12px; }
 }
+
+/* ---------- Google Drive en el menú ---------- */
+.menu { max-height: calc(100dvh - 90px); overflow-y: auto; }
+.menu [hidden] { display: none; }
+.menu .google-btn { flex-direction: row; align-items: center; gap: 10px; }
+.menu .google-btn span { display: flex; flex-direction: column; gap: 1px; }
+.menu-label { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-muted); padding: 8px 12px 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.menu-label span { text-transform: none; letter-spacing: 0; }
+.drive-list { max-height: 210px; overflow-y: auto; display: flex; flex-direction: column; }
+.menu-note { font-size: 11px; color: var(--fg-muted); padding: 6px 12px; }

@@ -30,6 +30,8 @@
   - Detecta no determinismo, movimientos a izquierda de la celda de inicio y MT que no se detienen (corte a los 1000 pasos).
 - **Menú Archivo** (botón *Archivo* del header):
   - Nuevo tablero, abrir y guardar el autómata como `.json`.
+  - *Compartir…*: en el celular abre el menú del sistema para mandar el `.json` por cualquier app (en Chrome de Android va como `.txt`; *Abrir archivo* acepta los dos). Si el navegador no puede compartir archivos, lo descarga.
+  - *Iniciar sesión con Google*: guarda los autómatas en una carpeta "Automater Pro" del Drive del usuario y los lista en *Mis autómatas*. Sin backend: login con Google Identity Services y API de Drive desde el navegador, con el permiso `drive.file` (la app solo ve los archivos que creó). El Client ID está en `js/ui/drive.js`; sus orígenes autorizados se configuran en Google Cloud (proyecto "Automater-Pro").
   - Exportar el diagrama como PNG (como se ve o con fondo blanco para imprimir).
   - Autoguardado en el navegador, separado por tipo: al volver a la página o cambiar de tipo, sigue lo último que había.
   - *Deshacer* en el aviso al limpiar, cargar el ejemplo o abrir un archivo.
@@ -86,7 +88,8 @@ js/
     tape.js           Cintas animadas de la MT
     help.js           Modal de Ayuda y formulario de contacto
     tour.js           Recorrido guiado (pasos y posicionamiento)
-    files.js          Menú Archivo: autoguardado, abrir/guardar .json, exportar PNG, deshacer
+    files.js          Menú Archivo: autoguardado, abrir/guardar/compartir .json, exportar PNG, deshacer
+    drive.js          Login con Google y autómatas en Google Drive (Mis autómatas)
 tests/engine.test.mjs Chequeos del motor
 ```
 

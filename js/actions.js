@@ -174,6 +174,7 @@ export const actions = {
 
   // Vacía el autómata y la salida de la prueba (común a "Limpiar" y "Ejemplo").
   resetAutomaton() {
+    this._driveFile = null; // el tablero nuevo ya no es el archivo abierto desde Drive
     Object.assign(this.state, {
       states: [], transitions: [], nextId: 1, nextTransId: 1,
       currentTestState: null, activeTransition: null

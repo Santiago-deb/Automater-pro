@@ -102,7 +102,7 @@ const STEPS = [
   {
     target: '#btnFile',
     title: 'Archivo',
-    text: 'Empezar de cero, abrir o guardar tu autómata como archivo, y exportar el diagrama como imagen (también con fondo blanco, para imprimir la entrega).'
+    text: 'Empezar de cero, abrir o guardar tu autómata como archivo, compartirlo por otra app y exportar el diagrama como imagen (también con fondo blanco, para imprimir la entrega). Si inicias sesión con Google, tus autómatas se guardan en tu Drive y aparecen en la lista "Mis autómatas".'
   },
   {
     target: ['#btnExample', '#btnClear'],
