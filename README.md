@@ -26,11 +26,13 @@
 
 ## 🚀 Cómo usarlo
 
-No requiere instalación ni dependencias. Simplemente:
+Está online en Vercel (se deploya solo con cada push a `main`). Para correrlo local no hace falta instalar nada, pero como usa ES modules hay que servirlo por HTTP (abrir `index.html` con doble clic no carga los módulos):
 
-1. Descarga el archivo `index.html`.
-2. Ábrelo con tu navegador web preferido (Chrome, Firefox, Edge, Safari).
-3. ¡Listo! Puedes empezar a crear tu autómata o cargar un ejemplo con el botón **"Ejemplo"**.
+```bash
+python3 -m http.server 8000   # y abrir http://localhost:8000
+```
+
+Tests del motor de simulación (sin dependencias): `node tests/engine.test.mjs`
 
 ### Guía rápida:
 1. **Configurar Alfabetos**: En el panel lateral, define los símbolos de entrada (y de pila si es APD).
@@ -39,11 +41,40 @@ No requiere instalación ni dependencias. Simplemente:
 4. **Conectar**: Selecciona la herramienta de conexión (flecha), haz clic en el estado origen y luego en el destino. Se abrirá un modal para configurar la transición.
 5. **Probar**: Escribe una cadena en el campo de verificación y presiona **Verificar** para ver la animación.
 
+## 🗂️ Estructura del código
+
+```
+index.html            Solo el markup (HTML + SVG del lienzo y modales)
+css/
+  base.css            Variables de color, reset y body
+  layout.css          Grilla de la app, header y botones
+  canvas.css          Lienzo, toolbar, estados y aristas SVG
+  panel.css           Panel lateral: listas, prueba, traza y pila
+  modals.css          Modales y toast
+  responsive.css      Breakpoints mobile
+js/
+  main.js             Punto de entrada: arma `App` y conecta los eventos
+  state.js            Forma del estado global
+  actions.js          Editar el autómata, verificar cadenas, cargar ejemplos
+  engine/             Lógica pura, sin DOM (testeable con node)
+    afd.js            simulateAFD()
+    apd.js            simulateAPD(), findConflict(), apdLabel()
+    examples.js       Autómatas de ejemplo
+  ui/
+    interaction.js    Pan, zoom, arrastre y clics en el lienzo
+    canvas.js         Dibujo SVG de estados y aristas
+    panel.js          Listas, traza, pila visual, toasts
+    modals.js         Modales para crear transiciones
+tests/engine.test.mjs Chequeos del motor
+```
+
+Para agregar un nuevo tipo de autómata (p. ej. AFND o Máquina de Turing): un `simulateX()` en `js/engine/`, un ejemplo en `examples.js`, y el caso en `verifyString()` de `actions.js`.
+
 ## 🛠️ Tecnologías Utilizadas
 
 - **HTML5**: Estructura semántica y SVG nativo para el lienzo gráfico.
 - **CSS3**: Diseño con Grid, Flexbox, variables CSS (Custom Properties) y animaciones keyframes.
-- **JavaScript (Vanilla JS)**: Lógica de validación, manejo del DOM y animaciones sin frameworks pesados.
+- **JavaScript (Vanilla JS, ES modules)**: Lógica de validación, manejo del DOM y animaciones sin frameworks ni build step.
 - **Pointer Events API**: Para un manejo unificado de mouse y pantallas táctiles.
 
 ## 📚 Teoría de referencia

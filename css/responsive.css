@@ -1,0 +1,40 @@
+@media (max-width: 900px) {
+  .app {
+    grid-template-columns: 1fr;
+    grid-template-rows: 56px 1fr 46vh;
+  }
+  .panel {
+    border-left: none;
+    border-top: 1px solid var(--border);
+    padding: 12px;
+    gap: 10px;
+  }
+  .panel-section { padding: 12px; }
+  .logo-text p { display: none; }
+  .logo-text h1 { font-size: 15px; }
+  .logo-mark { width: 30px; height: 30px; }
+  .header-actions .btn { padding: 8px; }
+  .header-actions .btn span { display: none; }
+  .header-center { justify-content: flex-start; }
+  .type-btn { padding: 6px 12px; font-size: 12px; }
+  .toolbar {
+    flex-direction: row;
+    top: 12px;
+    left: 12px;
+    padding: 4px;
+  }
+  .tool-btn { width: 36px; height: 36px; }
+  .tool-btn svg { width: 16px; height: 16px; }
+  .zoom-btn { width: 36px; height: 36px; }
+  .zoom-btn svg { width: 16px; height: 16px; }
+  .canvas-hint { font-size: 11px; padding: 8px 14px; bottom: 12px; }
+  .list { max-height: 120px; }
+  .modal-content { padding: 18px; }
+  .app-header { padding: 0 12px; gap: 8px; }
+}
+
+@media (max-width: 380px) {
+  .panel { padding: 10px; }
+  .panel-section { padding: 10px; }
+  .type-btn { padding: 6px 10px; font-size: 11px; }
+}
