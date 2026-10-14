@@ -1,0 +1,228 @@
+/* Ayuda: modal con pestañas, formulario de contacto y recorrido guiado. */
+
+/* Color del tipo activo con el acento como respaldo (el AFD no define --type) */
+/* color-scheme: scrollbars y controles nativos oscuros */
+.help-modal, .tour { color-scheme: dark; --hl: var(--type, var(--accent)); --hl-soft: var(--type-soft, var(--accent-soft)); --hl-glow: var(--type-glow, var(--accent-glow)); }
+
+.icon-btn {
+  width: 32px; height: 32px;
+  flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.icon-btn:hover { color: var(--fg); background: var(--bg-elev); }
+
+:is(.btn, .icon-btn, .help-tab, .seg-btn, .tool-btn, .zoom-btn, .type-btn):focus-visible {
+  outline: 2px solid var(--hl, var(--accent));
+  outline-offset: 2px;
+}
+
+.btn-lg { padding: 12px 16px; font-size: 14px; }
+.btn:disabled { opacity: 0.6; cursor: progress; transform: none; }
+
+/* ---------- Modal ---------- */
+
+.help-content { max-width: 440px; padding: 20px 24px 24px; }
+
+.help-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.help-head h3 { margin: 0; }
+
+.help-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  padding: 3px;
+  background: var(--bg-deep);
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  margin-bottom: 18px;
+}
+.help-tab {
+  border: none;
+  background: transparent;
+  color: var(--fg-muted);
+  padding: 8px 12px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.help-tab:hover { color: var(--fg); }
+.help-tab.active { background: var(--bg-elev); color: var(--fg); box-shadow: inset 0 0 0 1px var(--border-light); }
+
+.help-lead { color: var(--fg); opacity: 0.85; font-size: 14px; line-height: 1.55; margin-bottom: 18px; }
+
+.device-pick { margin-bottom: 20px; }
+.device-label { display: block; font-size: 12px; color: var(--fg-muted); margin-bottom: 6px; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.seg-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 10px 8px;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  background: var(--bg-elev);
+  color: var(--fg-muted);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.seg-btn:hover { color: var(--fg); }
+.seg-btn.active { border-color: var(--hl); color: var(--hl); background: var(--hl-soft); }
+
+/* El botón principal toma el color del tipo activo */
+.help-modal .btn-primary { background: var(--hl); border-color: var(--hl); }
+.help-modal .btn-primary:hover { box-shadow: 0 0 20px var(--hl-glow); }
+
+/* ---------- Contacto ---------- */
+
+.help-modal [hidden] { display: none !important; }
+
+.contact-form { display: flex; flex-direction: column; gap: 14px; }
+.contact-form .label-input label { font-size: 11px; }
+.contact-form .input:focus { border-color: var(--hl); box-shadow: 0 0 0 3px var(--hl-soft); }
+.contact-form .input[aria-invalid="true"] { border-color: var(--danger); }
+.contact-form textarea { resize: vertical; min-height: 120px; line-height: 1.5; }
+
+.char-count {
+  align-self: flex-end;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--fg-muted);
+}
+.char-count.near { color: var(--warning); }
+
+.form-error { color: var(--danger); font-size: 13px; }
+.form-error:empty { display: none; }
+
+.honey { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
+.contact-sent { text-align: center; padding: 12px 0 4px; }
+.contact-sent svg { color: var(--hl); filter: drop-shadow(0 0 10px var(--hl-glow)); margin-bottom: 10px; }
+.contact-sent h4 { font-size: 16px; margin-bottom: 4px; }
+.contact-sent p { color: var(--fg-muted); margin-bottom: 18px; overflow-wrap: anywhere; }
+.contact-sent strong { color: var(--fg); font-weight: 500; }
+
+/* ---------- Recorrido ---------- */
+
+.tour { position: fixed; inset: 0; z-index: 300; }
+
+/* El foco es un hueco: la sombra gigante oscurece todo lo demás */
+.tour-spot {
+  position: fixed;
+  border-radius: 12px;
+  box-shadow: 0 0 0 200vmax rgba(4, 6, 4, 0.74);
+  outline: 2px solid var(--hl);
+  outline-offset: 0;
+  transition: left 0.35s cubic-bezier(.4, 0, .2, 1), top 0.35s cubic-bezier(.4, 0, .2, 1),
+              width 0.35s cubic-bezier(.4, 0, .2, 1), height 0.35s cubic-bezier(.4, 0, .2, 1);
+  pointer-events: none;
+}
+.tour-spot::after { /* resplandor, sin tapar el elemento */
+  content: '';
+  position: absolute; inset: -2px;
+  border-radius: inherit;
+  box-shadow: 0 0 22px var(--hl-glow);
+}
+.tour-spot.empty { outline-color: transparent; }
+.tour-spot.empty::after { display: none; }
+
+.tour-card {
+  position: fixed;
+  width: 340px;
+  max-width: calc(100vw - 24px);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  padding: 14px 16px 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  transition: left 0.35s cubic-bezier(.4, 0, .2, 1), top 0.35s cubic-bezier(.4, 0, .2, 1);
+}
+.tour-card.compact { width: calc(100vw - 24px); }
+.tour-card.enter > :not(.tour-top) { animation: tourText 0.3s ease-out; }
+@keyframes tourText { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+.tour.intro .tour-spot, .tour.intro .tour-card { transition: none; }
+.tour.intro { animation: fadeIn 0.25s; }
+
+.tour-top { display: flex; align-items: center; gap: 10px; margin: -4px -6px 8px 0; }
+
+/* Progreso como una cadena de estados: el último es el final (doble círculo) */
+.tour-chain {
+  list-style: none;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.tour-chain li {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+.tour-chain li:last-child { flex: 0 0 auto; }
+.tour-chain li::before { /* estado */
+  content: '';
+  width: 9px; height: 9px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-light);
+  background: var(--bg-panel);
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.tour-chain li:not(:last-child)::after { /* transición */
+  content: '';
+  flex: 1;
+  height: 1.5px;
+  background: var(--border-light);
+  margin: 0 2px;
+}
+.tour-chain li.done::before { background: var(--fg-muted); border-color: var(--fg-muted); }
+.tour-chain li.done::after { background: var(--fg-muted); }
+.tour-chain li.current::before { background: var(--hl); border-color: var(--hl); box-shadow: 0 0 8px var(--hl-glow); }
+.tour-chain li.final::before { width: 13px; height: 13px; box-shadow: inset 0 0 0 2px var(--bg-panel); }
+.tour-chain li.final.current::before { box-shadow: inset 0 0 0 2px var(--bg-panel), 0 0 8px var(--hl-glow); }
+
+.tour-count { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--fg-muted); margin-bottom: 4px; }
+.tour-card h4 { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 6px; }
+.tour-card #tourText { font-size: 14px; line-height: 1.55; color: var(--fg); opacity: 0.88; margin-bottom: 16px; }
+
+.tour-actions { display: flex; gap: 8px; }
+.tour-actions .btn { flex: 1; justify-content: center; padding: 10px 14px; }
+.tour-actions .tour-prev:disabled { opacity: 0.35; cursor: default; }
+.tour .btn-primary { background: var(--hl); border-color: var(--hl); }
+.tour .btn-primary:hover { box-shadow: 0 0 20px var(--hl-glow); }
+
+.tour.no-motion .tour-spot, .tour.no-motion .tour-card { transition: none; }
+.tour.no-motion .tour-card.enter > * { animation: none; }
+
+/* ---------- Mobile ---------- */
+
+@media (max-width: 640px) {
+  /* El modal de ayuda sube como hoja desde abajo */
+  .help-modal { align-items: flex-end; padding: 0; }
+  .help-content {
+    max-width: none;
+    border-radius: 18px 18px 0 0;
+    border-bottom: none;
+    max-height: 92dvh;
+    padding: 16px 16px calc(20px + env(safe-area-inset-bottom));
+    animation: sheetUp 0.25s cubic-bezier(.4, 0, .2, 1);
+  }
+  @keyframes sheetUp { from { transform: translateY(40px); } to { transform: none; } }
+  .help-content .input { font-size: 16px; } /* evita el zoom automático de iOS */
+  .seg-btn { font-size: 12px; padding: 12px 6px; }
+  .tour-actions .btn { padding: 12px 14px; }
+  .icon-btn { width: 40px; height: 40px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .help-content, .tour, .tour-card.enter > * { animation: none !important; }
+}

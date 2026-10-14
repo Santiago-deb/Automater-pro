@@ -28,6 +28,9 @@
   - Rótulos con la notación de la cursada: `a,B/<a,D><X,D>`.
   - Animación de las cintas: la tira se desliza bajo la cabeza de lectura/escritura, la celda escrita destella y se muestra la configuración α₁ eᵢ α₂.
   - Detecta no determinismo, movimientos a izquierda de la celda de inicio y MT que no se detienen (corte a los 1000 pasos).
+- **Ayuda integrada** (botón *Ayuda* del header):
+  - **Tutorial**: recorrido guiado por toda la página (tablero, herramientas, alfabetos, estados, transiciones y verificación). Detecta si se usa con mouse o con pantalla táctil y explica los gestos de cada uno; los textos se adaptan al tipo de autómata abierto.
+  - **Contacto**: formulario (correo, motivo y mensaje de hasta 600 caracteres) que llega por mail vía [FormSubmit](https://formsubmit.co), sin backend.
 - **100% Responsive**: Diseñado con un layout adaptable para funcionar perfectamente en computadoras de escritorio, tablets y teléfonos móviles.
 
 ## 🚀 Cómo usarlo
@@ -57,6 +60,7 @@ css/
   canvas.css          Lienzo, toolbar, estados y aristas SVG
   panel.css           Panel lateral: listas, prueba, traza y pila
   modals.css          Modales y toast
+  help.css            Modal de ayuda, contacto y recorrido guiado
   responsive.css      Breakpoints mobile
 js/
   main.js             Punto de entrada: arma `App` y conecta los eventos
@@ -74,6 +78,8 @@ js/
     panel.js          Listas, traza, pila visual, toasts
     modals.js         Modales para crear transiciones
     tape.js           Cintas animadas de la MT
+    help.js           Modal de Ayuda y formulario de contacto
+    tour.js           Recorrido guiado (pasos y posicionamiento)
 tests/engine.test.mjs Chequeos del motor
 ```
 
