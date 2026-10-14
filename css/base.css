@@ -19,7 +19,15 @@
   --stack-glow: rgba(77, 208, 225, 0.4);
   --z0: #ffb627;
   --z0-soft: rgba(255, 182, 39, 0.15);
+  --tape: #b388ff;
+  --tape-soft: rgba(179, 136, 255, 0.15);
+  --tape-glow: rgba(179, 136, 255, 0.4);
 }
+
+/* Color de cada tipo de autómata. El body lleva la clase del tipo activo
+   (así lo heredan también hermanos, modales y toasts). */
+.apd { --type: var(--stack); --type-soft: var(--stack-soft); --type-glow: var(--stack-glow); }
+.mt { --type: var(--tape); --type-soft: var(--tape-soft); --type-glow: var(--tape-glow); }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 *::selection { background: var(--accent); color: var(--bg-deep); }

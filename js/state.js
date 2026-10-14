@@ -3,12 +3,16 @@
 
 export function createState() {
   return {
-    automatonType: 'afd', // 'afd' | 'apd'
+    automatonType: 'afd', // 'afd' | 'apd' | 'mt' (claves de engine/automata.js)
     alphabet: ['0', '1'],
     stackAlphabet: ['A', 'Z'],
     initialStackSymbol: 'Z',
+    tapeAlphabet: ['X', 'A'], // auxiliares de la MT
+    tapeCount: 2,
     states: [],      // { id, x, y, label, isStart, isFinal }
-    transitions: [], // { id, from, to, symbol, [isEpsilon, stackTop, stackReplace, output] }
+    // AFD/APD: { id, from, to, symbol, [isEpsilon, stackTop, stackReplace, output] }
+    // MT:      { id, from, to, reads: [], writes: [], moves: [] } (uno por cinta)
+    transitions: [],
     selectedState: null,
     connectFrom: null,
     mode: 'select',  // 'select' | 'add' | 'connect' | 'delete'
@@ -20,6 +24,7 @@ export function createState() {
     suppressClick: false,
     testing: false,
     stackModal: { from: null, to: null, input: null, stackTop: null },
+    tapeModal: { from: null, to: null },
     // Cámara (Pan & Zoom)
     camera: { x: 0, y: 0, scale: 1 },
     panning: false,
@@ -29,3 +34,6 @@ export function createState() {
 }
 
 export const STATE_RADIUS = 28;
+
+// Clase CSS del color de cada tipo (ver base.css); el AFD usa el acento por defecto.
+export const typeClass = type => (type === 'afd' ? '' : type);

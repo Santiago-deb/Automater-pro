@@ -1,6 +1,7 @@
 // Panel lateral: listas de estados/transiciones, resultado de la prueba,
 // traza, pila visual, toasts y hint del lienzo.
-import { apdLabel } from '../engine/apd.js';
+import { AUTOMATA } from '../engine/automata.js';
+import { typeClass } from '../state.js';
 
 const $ = id => document.getElementById(id);
 
@@ -111,14 +112,15 @@ export const panel = {
       const row = el('div', 'trans-row');
       row.append(el('span', 'trans-from', from.label), el('span', 'trans-arrow', '→'), el('span', 'trans-to', to.label));
 
-      if (this.state.automatonType === 'afd') {
-        const sym = el('span', 'trans-detail', t.symbol);
-        Object.assign(sym.style, { background: 'var(--accent-soft)', color: 'var(--accent)', borderColor: 'var(--accent)' });
-        row.appendChild(sym);
-      } else {
-        row.appendChild(el('span', 'trans-detail', apdLabel(t)));
-        if (t.output) row.appendChild(el('span', 'trans-output', `→ ${t.output}`));
+      const type = this.state.automatonType;
+      const detail = el('span', 'trans-detail', AUTOMATA[type].label(t));
+      if (type === 'afd') {
+        Object.assign(detail.style, { background: 'var(--accent-soft)', color: 'var(--accent)', borderColor: 'var(--accent)' });
+      } else if (type === 'mt') {
+        Object.assign(detail.style, { background: 'var(--tape-soft)', color: 'var(--tape)', borderColor: 'var(--tape)' });
       }
+      row.appendChild(detail);
+      if (t.output) row.appendChild(el('span', 'trans-output', `→ ${t.output}`));
 
       row.appendChild(iconButton('trans-delete', 'Eliminar transición', ICONS.trash(12), () => this.deleteTransition(t.id)));
 
@@ -131,7 +133,8 @@ export const panel = {
   // Traza "q0 q1 1 q0 1 ..." con el paso actual resaltado.
   renderTrace(trace, currentIdx) {
     const isAPD = this.state.automatonType === 'apd';
-    const cls = isAPD ? ' apd' : '';
+    const theme = typeClass(this.state.automatonType);
+    const cls = theme ? ` ${theme}` : '';
     const wrap = $('testTrace');
     wrap.innerHTML = '';
     trace.forEach((t, i) => {

@@ -61,9 +61,9 @@
   color: var(--bg-deep);
   box-shadow: 0 0 14px var(--accent-glow);
 }
-.tool-btn.active.apd {
-  background: var(--stack);
-  box-shadow: 0 0 14px var(--stack-glow);
+.tool-btn.active:is(.apd, .mt) {
+  background: var(--type);
+  box-shadow: 0 0 14px var(--type-glow);
 }
 
 .canvas-hint {
@@ -96,7 +96,7 @@
   flex-shrink: 0;
   animation: pulse 2s infinite;
 }
-.hint-pulse.apd { background: var(--stack); }
+.hint-pulse:is(.apd, .mt) { background: var(--type); }
 @keyframes pulse {
   0%, 100% { box-shadow: 0 0 0 0 var(--accent-glow); }
   50% { box-shadow: 0 0 0 8px transparent; }
@@ -119,36 +119,36 @@
 .state-node.is-start .state-circle { stroke: var(--accent); }
 .state-node.is-final .state-circle { stroke: var(--final); }
 .state-node.is-selected .state-circle { fill: var(--accent-soft); }
-.state-node.apd.is-start .state-circle { stroke: var(--stack); }
-.state-node.apd.is-selected .state-circle { fill: var(--stack-soft); }
+.state-node:is(.apd, .mt).is-start .state-circle { stroke: var(--type); }
+.state-node:is(.apd, .mt).is-selected .state-circle { fill: var(--type-soft); }
 .state-node.connecting-source .state-circle {
   fill: var(--accent-soft);
   stroke: var(--accent);
   stroke-width: 3;
   filter: drop-shadow(0 0 12px var(--accent-glow));
 }
-.state-node.apd.connecting-source .state-circle {
-  fill: var(--stack-soft);
-  stroke: var(--stack);
-  filter: drop-shadow(0 0 12px var(--stack-glow));
+.state-node:is(.apd, .mt).connecting-source .state-circle {
+  fill: var(--type-soft);
+  stroke: var(--type);
+  filter: drop-shadow(0 0 12px var(--type-glow));
 }
 .state-node.current .state-circle {
   fill: var(--accent);
   stroke: var(--accent);
   animation: statePulse 1s infinite;
 }
-.state-node.current.apd .state-circle {
-  fill: var(--stack);
-  stroke: var(--stack);
-  animation: statePulseStack 1s infinite;
+.state-node.current:is(.apd, .mt) .state-circle {
+  fill: var(--type);
+  stroke: var(--type);
+  animation: statePulseType 1s infinite;
 }
 @keyframes statePulse {
   0%, 100% { filter: drop-shadow(0 0 12px var(--accent-glow)); }
   50% { filter: drop-shadow(0 0 24px var(--accent-glow)); }
 }
-@keyframes statePulseStack {
-  0%, 100% { filter: drop-shadow(0 0 12px var(--stack-glow)); }
-  50% { filter: drop-shadow(0 0 24px var(--stack-glow)); }
+@keyframes statePulseType {
+  0%, 100% { filter: drop-shadow(0 0 12px var(--type-glow)); }
+  50% { filter: drop-shadow(0 0 24px var(--type-glow)); }
 }
 .state-node.current .state-label { fill: var(--bg-deep); }
 
@@ -176,7 +176,7 @@
   fill: none;
   pointer-events: none;
 }
-.state-start-arrow.apd { stroke: var(--stack); }
+.state-start-arrow:is(.apd, .mt) { stroke: var(--type); }
 
 .edge-path {
   fill: none;
@@ -189,9 +189,9 @@
   stroke-width: 3;
   filter: drop-shadow(0 0 8px var(--accent-glow));
 }
-.edge-path.is-active.apd {
-  stroke: var(--stack);
-  filter: drop-shadow(0 0 8px var(--stack-glow));
+.edge-path.is-active:is(.apd, .mt) {
+  stroke: var(--type);
+  filter: drop-shadow(0 0 8px var(--type-glow));
 }
 
 .edge-hit {
@@ -212,9 +212,9 @@
   fill: var(--accent);
   stroke: var(--accent);
 }
-.edge-path.is-active.apd ~ .edge-label-bg {
-  fill: var(--stack);
-  stroke: var(--stack);
+.edge-path.is-active:is(.apd, .mt) ~ .edge-label-bg {
+  fill: var(--type);
+  stroke: var(--type);
 }
 .edge-path.is-active ~ .edge-label {
   fill: var(--bg-deep);
@@ -230,4 +230,4 @@
   pointer-events: none;
   user-select: none;
 }
-.edge-label.apd { fill: var(--stack); }
+.edge-label:is(.apd, .mt) { fill: var(--type); }

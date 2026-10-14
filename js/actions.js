@@ -1,10 +1,22 @@
 // Acciones que modifican el autómata y orquestan la verificación.
-import { simulateAFD } from './engine/afd.js';
-import { simulateAPD } from './engine/apd.js';
-import { exampleAFD, exampleAPD } from './engine/examples.js';
+import { AUTOMATA } from './engine/automata.js';
+import { mtDelta } from './engine/mt.js';
+import { typeClass } from './state.js';
 
 const $ = id => document.getElementById(id);
-const STEP_DELAY = { afd: 500, apd: 700 }; // ms por paso de la animación
+const THEMES = Object.keys(AUTOMATA).map(typeClass).filter(Boolean);
+const TOAST_TYPE = { afd: 'success', apd: 'stack', mt: 'tape' };
+
+// ms por paso de la animación. La MT puede dar cientos de pasos: se acelera con el largo.
+// ponytail: heurística fija; agregar control de velocidad si hace falta
+const stepDelay = (type, steps) =>
+  ({ afd: 500, apd: 700 })[type] ?? Math.max(120, Math.min(600, 9000 / steps));
+
+// Deja en `el` solo la clase de color del tipo actual (si `on`).
+function setTheme(el, type, on = true) {
+  el.classList.remove(...THEMES);
+  if (on && typeClass(type)) el.classList.add(typeClass(type));
+}
 
 export const actions = {
   getState(id) {
@@ -14,14 +26,15 @@ export const actions = {
   switchType(type) {
     if (this.state.automatonType === type) return;
     this.state.automatonType = type;
-    const isAPD = type === 'apd';
+    setTheme(document.body, type);
     document.querySelectorAll('.type-btn').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.type === type);
-      btn.classList.toggle('apd', isAPD && btn.dataset.type === 'apd');
+      setTheme(btn, type, btn.dataset.type === type);
     });
-    $('stackSection').style.display = isAPD ? 'block' : 'none';
-    document.querySelectorAll('.tool-btn.active').forEach(btn => btn.classList.toggle('apd', isAPD));
-    $('hintPulse').classList.toggle('apd', isAPD);
+    $('stackSection').style.display = type === 'apd' ? 'block' : 'none';
+    $('tapeSection').style.display = type === 'mt' ? 'block' : 'none';
+    document.querySelectorAll('.tool-btn.active').forEach(btn => setTheme(btn, type));
+    setTheme($('hintPulse'), type);
     this.loadExample();
   },
 
@@ -32,7 +45,7 @@ export const actions = {
     document.querySelectorAll('.tool-btn').forEach(btn => {
       const isActive = btn.dataset.mode === mode;
       btn.classList.toggle('active', isActive);
-      btn.classList.toggle('apd', isActive && this.state.automatonType === 'apd');
+      setTheme(btn, this.state.automatonType, isActive);
     });
     this.svg.setAttribute('class', `mode-${mode}`);
     this.updateHint();
@@ -76,12 +89,30 @@ export const actions = {
     this.render();
     const fromLabel = this.getState(from).label;
     const toLabel = this.getState(to).label;
-    if (this.state.automatonType === 'afd') {
+    const type = this.state.automatonType;
+    if (type === 'afd') {
       this.showToast(`δ(${fromLabel}, ${data.symbol}) = ${toLabel}`, 'success');
+    } else if (type === 'mt') {
+      this.showToast(mtDelta(data, fromLabel, toLabel), 'tape');
     } else {
       const inS = data.isEpsilon ? 'ε' : data.symbol;
       const rep = data.stackReplace === '' ? 'ε' : data.stackReplace;
       this.showToast(`δ(${fromLabel}, ${inS}, ${data.stackTop}) = (${toLabel}, ${rep})`, 'stack');
+    }
+  },
+
+  // Cambiar k invalida las transiciones de MT con otra cantidad de cintas.
+  setTapeCount(k) {
+    k = Math.max(1, Math.min(4, k || 1));
+    $('tapeCountInput').value = k;
+    if (k === this.state.tapeCount) return;
+    this.state.tapeCount = k;
+    const before = this.state.transitions.length;
+    this.state.transitions = this.state.transitions.filter(t => !t.reads || t.reads.length === k);
+    this.clearTestOutput();
+    this.render();
+    if (this.state.transitions.length < before) {
+      this.showToast(`Se borraron ${before - this.state.transitions.length} transición(es) hechas para otra cantidad de cintas`, 'tape');
     }
   },
 
@@ -94,8 +125,7 @@ export const actions = {
   verifyString() {
     if (this.state.testing) return;
     const type = this.state.automatonType;
-    const simulate = type === 'afd' ? simulateAFD : simulateAPD;
-    const { result, msg, trace, highlight } = simulate(this.state, $('testString').value);
+    const { result, msg, trace, highlight } = AUTOMATA[type].simulate(this.state, $('testString').value);
 
     if (trace.length === 0) {
       this.showTestResult(result, msg);
@@ -105,16 +135,16 @@ export const actions = {
       }
       return;
     }
-    this.animateTrace(trace, result, msg, STEP_DELAY[type]);
+    this.animateTrace(trace, result, msg, stepDelay(type, trace.length));
   },
 
   animateTrace(trace, result, msg, delay) {
-    const isAPD = this.state.automatonType === 'apd';
+    const type = this.state.automatonType;
     this.state.testing = true;
     this.state.currentTestState = null;
     this.state.activeTransition = null;
     $('testResult').classList.remove('show');
-    if (!isAPD) $('stackVisualWrap').innerHTML = '';
+    if (type !== 'apd') $('stackVisualWrap').innerHTML = '';
 
     let i = 0;
     const step = () => {
@@ -127,7 +157,8 @@ export const actions = {
       this.state.currentTestState = t.state;
       if (t.transitionId) this.state.activeTransition = t.transitionId;
       this.renderTrace(trace, i);
-      if (isAPD) this.renderStackVisual(t);
+      if (type === 'apd') this.renderStackVisual(t);
+      if (type === 'mt') this.renderTapeVisual(t, trace[i - 1]);
       this.renderCanvas();
       i++;
       setTimeout(step, delay);
@@ -158,10 +189,8 @@ export const actions = {
     this.resetAutomaton();
 
     const rect = this.svg.getBoundingClientRect();
-    const isAPD = this.state.automatonType === 'apd';
-    const ex = isAPD
-      ? exampleAPD(rect.width / 2, rect.height / 2, rect.width, rect.height)
-      : exampleAFD(rect.width / 2, rect.height / 2, rect.width);
+    const type = this.state.automatonType;
+    const ex = AUTOMATA[type].example(rect.width / 2, rect.height / 2, rect.width, rect.height);
 
     this.state.states = ex.states;
     this.state.transitions = ex.transitions;
@@ -169,14 +198,20 @@ export const actions = {
     this.state.nextTransId = ex.transitions.length + 1;
     this.state.alphabet = ex.alphabet;
     $('alphabetInput').value = ex.alphabet.join(', ');
-    if (isAPD) {
+    if (ex.stackAlphabet) {
       this.state.stackAlphabet = ex.stackAlphabet;
       this.state.initialStackSymbol = ex.initialStackSymbol;
       $('stackAlphabetInput').value = ex.stackAlphabet.join(', ');
       $('initialStackInput').value = ex.initialStackSymbol;
     }
+    if (ex.tapeAlphabet) {
+      this.state.tapeAlphabet = ex.tapeAlphabet;
+      this.state.tapeCount = ex.tapeCount;
+      $('tapeAlphabetInput').value = ex.tapeAlphabet.join(', ');
+      $('tapeCountInput').value = ex.tapeCount;
+    }
     $('testString').value = ex.testString;
-    this.showToast(ex.toast, isAPD ? 'stack' : 'success');
+    this.showToast(ex.toast, TOAST_TYPE[type]);
 
     this.updateHint();
     this.render();

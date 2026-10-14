@@ -1,7 +1,16 @@
-// Modales para crear transiciones: símbolo simple (AFD) o con pila (APD).
+// Modales para crear transiciones: símbolo simple (AFD), con pila (APD) o con cintas (MT).
 import { findConflict } from '../engine/apd.js';
+import { findConflictMT, tapeSymbols, MOVES, BLANK } from '../engine/mt.js';
 
 const $ = id => document.getElementById(id);
+
+function select(options, value) {
+  const sel = document.createElement('select');
+  sel.className = 'input mono tape-focus';
+  sel.append(...options.map(o => new Option(o, o)));
+  sel.value = value;
+  return sel;
+}
 
 function symbolButton(label, className, onClick) {
   const btn = document.createElement('button');
@@ -23,8 +32,10 @@ function highlight(gridId, idx, color) {
 
 export const modals = {
   openTransitionModal(from, to) {
-    if (this.state.automatonType === 'afd') this.openSymbolModal(from, to);
-    else this.openStackModal(from, to);
+    const type = this.state.automatonType;
+    if (type === 'afd') this.openSymbolModal(from, to);
+    else if (type === 'apd') this.openStackModal(from, to);
+    else this.openTapeModal(from, to);
   },
 
   openSymbolModal(from, to) {
@@ -131,5 +142,59 @@ export const modals = {
       stackTop, stackReplace: replace, output: output || null
     });
     this.closeStackModal();
+  },
+
+  // Una fila por cinta: "C1  [lee] → [escribe] [mov]". Al elegir qué se lee,
+  // lo escrito copia ese símbolo hasta que se lo cambie a mano.
+  openTapeModal(from, to) {
+    const fromState = this.getState(from);
+    const toState = this.getState(to);
+    if (!fromState || !toState) return;
+
+    this.state.tapeModal = { from, to };
+    $('tapeModalFrom').textContent = fromState.label;
+    $('tapeModalTo').textContent = toState.label;
+
+    const symbols = tapeSymbols(this.state);
+    const rows = Array.from({ length: this.state.tapeCount }, (_, i) => {
+      const first = i === 0 ? symbols[0] : BLANK;
+      const read = select(symbols, first);
+      const write = select(symbols, first);
+      const move = select(MOVES, 'D');
+      read.dataset.role = 'read';
+      write.dataset.role = 'write';
+      move.dataset.role = 'move';
+      read.addEventListener('change', () => { if (!write.dataset.touched) write.value = read.value; });
+      write.addEventListener('change', () => { write.dataset.touched = '1'; });
+
+      const row = document.createElement('div');
+      row.className = 'tape-rule';
+      const arrow = document.createElement('span');
+      arrow.textContent = '→';
+      const name = document.createElement('span');
+      name.textContent = `C${i + 1}`;
+      row.append(name, read, arrow, write, move);
+      return row;
+    });
+    $('tapeRules').replaceChildren(...rows);
+    $('tapeModal').classList.add('show');
+  },
+
+  closeTapeModal() {
+    $('tapeModal').classList.remove('show');
+  },
+
+  confirmTapeTransition() {
+    const { from, to } = this.state.tapeModal;
+    const values = role => [...document.querySelectorAll(`#tapeRules [data-role=${role}]`)].map(s => s.value);
+    const reads = values('read');
+
+    if (findConflictMT(this.state.transitions, from, reads)) {
+      const label = this.getState(from).label;
+      return this.showToast(`No determinista: ya existe δ(${label}, ${reads.join(', ')})`, 'error');
+    }
+
+    this.addTransition(from, to, { reads, writes: values('write'), moves: values('move') });
+    this.closeTapeModal();
   }
 };
