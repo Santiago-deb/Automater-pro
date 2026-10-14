@@ -35,12 +35,8 @@ function loadGIS() {
   return gisLoading;
 }
 
-// BETA LOCAL: con ?demo en la URL se simula Google (ver drive-demo.js). Borrar antes de producción.
-const DEMO = !CLIENT_ID && new URLSearchParams(location.search).has('demo');
-
 async function requestToken(hint) {
-  if (DEMO) await import('./drive-demo.js');
-  else if (!CLIENT_ID) throw new Error('Falta configurar el Client ID de Google en js/ui/drive.js');
+  if (!CLIENT_ID) throw new Error('Falta configurar el Client ID de Google en js/ui/drive.js');
   await loadGIS();
   return new Promise((ok, fail) => {
     google.accounts.oauth2.initTokenClient({
@@ -137,7 +133,7 @@ export const drive = {
     $('driveUser').hidden = !s;
     // Se precarga el script de Google al abrir el menú: así el clic en "Iniciar
     // sesión" abre la ventana enseguida y el navegador no la bloquea.
-    if (!s) return DEMO ? import('./drive-demo.js') : CLIENT_ID && loadGIS().catch(() => {});
+    if (!s) return loadGIS().catch(() => {});
     $('driveUserName').textContent = s.user?.emailAddress ?? '';
     const list = $('driveList');
     list.replaceChildren(Object.assign(document.createElement('p'), { className: 'menu-note', textContent: 'Cargando…' }));
