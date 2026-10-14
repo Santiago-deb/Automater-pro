@@ -16,7 +16,7 @@ const STEPS = [
   {
     target: '.type-toggle',
     title: 'Elige el tipo de máquina',
-    text: 'AFD, autómata de pila (APD) o Máquina de Turing (MT). Al cambiar de tipo se carga un ejemplo listo para probar.'
+    text: 'Autómata finito (AF, determinístico o no), autómata de pila (APD) o Máquina de Turing (MT). Cada tipo guarda su propio trabajo: si cambias y vuelves, sigue ahí.'
   },
   {
     target: '.canvas-area',
@@ -51,7 +51,7 @@ const STEPS = [
     text: (d, type) => {
       const tap = d === 'touch' ? 'Toca' : 'Haz clic en';
       const what = {
-        afd: 'el símbolo que se lee',
+        afd: 'el símbolo que se lee (si un estado tiene dos destinos con el mismo símbolo, queda un AFND)',
         apd: 'el símbolo de entrada (o ε), el tope de pila y con qué se reemplaza',
         mt: 'qué lee, qué escribe y hacia dónde se mueve cada cinta (I, D o N)'
       }[type];
@@ -100,9 +100,14 @@ const STEPS = [
     }
   },
   {
-    target: ['#btnExample', '#btnClear'],
-    title: 'Ejemplo y Limpiar',
-    text: 'Ejemplo carga una máquina ya armada del tipo elegido. Limpiar vacía el tablero para empezar desde cero.'
+    target: '#btnTools',
+    title: 'Herramientas para los TPs',
+    text: 'Probar muchas cadenas de una vez, listar el lenguaje, sacar la definición formal y la tabla δ, pasar de AFND a AFD, minimizar, gramáticas y expresiones regulares, y dibujar un autómata a partir de su tabla.'
+  },
+  {
+    target: '#btnFile',
+    title: 'Archivo',
+    text: 'Empezar de cero, cargar un ejemplo, abrir o guardar tu autómata, y exportar el diagrama como imagen (también con fondo blanco, para imprimir la entrega). Lo que haces se guarda solo en este navegador.'
   },
   {
     target: '#btnHelp',

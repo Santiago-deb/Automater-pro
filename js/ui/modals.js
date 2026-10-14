@@ -43,22 +43,30 @@ export const modals = {
     const toState = this.getState(to);
     if (!fromState || !toState) return;
 
+    // Solo se excluyen los símbolos que ya van de `from` a `to`. Si un símbolo ya
+    // sale de `from` hacia otro estado, usarlo vuelve al autómata no determinístico.
     const available = this.state.alphabet.filter(sym =>
-      !this.state.transitions.some(t => t.from === from && t.symbol === sym && !t.isEpsilon)
+      !this.state.transitions.some(t => t.from === from && t.to === to && t.symbol === sym)
     );
     if (available.length === 0) {
-      this.showToast(`${fromState.label} ya tiene transiciones para todo el alfabeto`, 'error');
+      this.showToast(`Ya hay transiciones de ${fromState.label} a ${toState.label} con todo el alfabeto`, 'error');
       return;
     }
+    const usedElsewhere = sym => this.state.transitions.some(t => t.from === from && t.symbol === sym);
 
     $('modalFrom').textContent = fromState.label;
     $('modalTo').textContent = toState.label;
-    $('symbolGrid').replaceChildren(...available.map(sym =>
-      symbolButton(sym, 'symbol-btn', () => {
+    $('symbolGrid').replaceChildren(...available.map(sym => {
+      const nd = usedElsewhere(sym);
+      const btn = symbolButton(sym, 'symbol-btn' + (nd ? ' nd' : ''), () => {
         this.addTransition(from, to, { symbol: sym });
         this.closeSymbolModal();
-      })
-    ));
+        if (nd) this.showToast(`Ahora es un AFND: δ(${fromState.label}, ${sym}) tiene más de un destino`, 'success');
+      });
+      if (nd) btn.title = `δ(${fromState.label}, ${sym}) ya está definida: usarlo lo vuelve no determinístico (AFND)`;
+      return btn;
+    }));
+    $('symbolModalHint').hidden = !available.some(usedElsewhere);
     $('symbolModal').classList.add('show');
   },
 

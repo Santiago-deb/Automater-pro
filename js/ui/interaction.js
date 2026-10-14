@@ -130,6 +130,7 @@ export const interaction = {
     }
     // Evita que el click que sigue a un arrastre seleccione/alterne el estado
     if (this.state.pendingDrag?.active) {
+      this.scheduleSave(); // la posición nueva también se guarda
       this.state.suppressClick = true;
       setTimeout(() => { this.state.suppressClick = false; }, 50);
     }
@@ -144,7 +145,7 @@ export const interaction = {
     if (stateEl) {
       this.handleStateClick(parseInt(stateEl.dataset.id));
     } else if (edgeEl) {
-      if (this.state.mode === 'delete') this.deleteTransition(parseInt(edgeEl.dataset.id));
+      if (this.state.mode === 'delete') this.deleteTransition(edgeEl.dataset.ids.split(',').map(Number));
     } else if (this.state.mode === 'add') {
       const pos = this.getWorldPos(e);
       this.addState(pos.x, pos.y);
