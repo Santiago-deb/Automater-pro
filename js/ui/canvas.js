@@ -1,8 +1,9 @@
 // Dibujo del autómata en el SVG (estados y aristas).
-import { STATE_RADIUS as r } from '../state.js';
-import { apdLabel } from '../engine/apd.js';
+import { STATE_RADIUS as r, typeClass } from '../state.js';
+import { AUTOMATA } from '../engine/automata.js';
 
 const NS = 'http://www.w3.org/2000/svg';
+const MARKER_SUFFIX = { afd: '', apd: '-stack', mt: '-tape' }; // ids de <marker> en index.html
 
 function svgEl(tag, attrs = {}, classes = []) {
   const el = document.createElementNS(NS, tag);
@@ -68,23 +69,23 @@ export const canvas = {
     if (!from || !to) return;
 
     const isActive = this.state.activeTransition === t.id;
-    const isAPD = this.state.automatonType === 'apd';
+    const type = this.state.automatonType;
+    const theme = typeClass(type);
     const { d, midX, midY } = edgeGeometry(t, from, to, this.state.transitions);
 
     const g = svgEl('g', {}, ['edge-group']);
     g.dataset.id = t.id;
 
-    let marker = 'url(#arrow-default)';
-    if (isActive) marker = isAPD ? 'url(#arrow-active-stack)' : 'url(#arrow-active)';
+    const marker = isActive ? `url(#arrow-active${MARKER_SUFFIX[type]})` : 'url(#arrow-default)';
     g.appendChild(svgEl('path', { d, 'marker-end': marker },
-      ['edge-path', isActive && 'is-active', isActive && isAPD && 'apd']));
+      ['edge-path', isActive && 'is-active', isActive && theme]));
     g.appendChild(svgEl('path', { d }, ['edge-hit']));
 
-    const label = isAPD ? apdLabel(t) + (t.output ? `, ${t.output}` : '') : t.symbol;
+    const label = AUTOMATA[type].label(t) + (t.output ? `, ${t.output}` : '');
     const labelW = label.length * 7 + 14;
     g.appendChild(svgEl('rect',
       { x: midX - labelW / 2, y: midY - 10, width: labelW, height: 20, rx: 10 }, ['edge-label-bg']));
-    const text = svgEl('text', { x: midX, y: midY }, ['edge-label', isAPD && 'apd']);
+    const text = svgEl('text', { x: midX, y: midY }, ['edge-label', theme]);
     text.textContent = label;
     g.appendChild(text);
 
@@ -92,10 +93,10 @@ export const canvas = {
   },
 
   renderState(s) {
-    const isAPD = this.state.automatonType === 'apd';
+    const type = this.state.automatonType;
     const g = svgEl('g', { transform: `translate(${s.x}, ${s.y})` }, [
       'state-node',
-      isAPD && 'apd',
+      typeClass(type),
       s.isStart && 'is-start',
       s.isFinal && 'is-final',
       this.state.selectedState === s.id && 'is-selected',
@@ -107,8 +108,8 @@ export const canvas = {
     if (s.isStart) {
       g.appendChild(svgEl('path', {
         d: `M ${-r - 22} 0 L ${-r - 4} 0`,
-        'marker-end': isAPD ? 'url(#arrow-start-stack)' : 'url(#arrow-start)'
-      }, ['state-start-arrow', isAPD && 'apd']));
+        'marker-end': `url(#arrow-start${MARKER_SUFFIX[type]})`
+      }, ['state-start-arrow', typeClass(type)]));
     }
 
     g.appendChild(svgEl('circle', { cx: 0, cy: 0, r }, ['state-circle']));

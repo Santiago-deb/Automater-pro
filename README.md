@@ -1,11 +1,11 @@
 # 🤖 Automater Pro
 
-**Automater Pro** es un verificador y simulador visual interactivo de Autómatas Finitos Deterministas (AFD) y Autómatas de Pila Deterministas (APD). Diseñado con una interfaz moderna, intuitiva y completamente responsive, permite construir autómatas desde cero o cargar ejemplos predefinidos para ver su ejecución paso a paso.
+**Automater Pro** es un verificador y simulador visual interactivo de Autómatas Finitos Deterministas (AFD), Autómatas de Pila Deterministas (APD) y Máquinas de Turing determinísticas de k cintas (MT). Diseñado con una interfaz moderna, intuitiva y completamente responsive, permite construir autómatas desde cero o cargar ejemplos predefinidos para ver su ejecución paso a paso.
 
 
 ## ✨ Características Principales
 
-- **Doble Modo**: Alternancia fluida entre simulación de AFD (Autómatas Finitos) y APD (Autómatas de Pila).
+- **Tres modos**: AFD (Autómatas Finitos), APD (Autómatas de Pila) y MT (Máquinas de Turing).
 - **Lienzo Interactivo (SVG)**: 
   - Agrega, mueve y conecta estados fácilmente.
   - Soporte para bucles y aristas bidireccionales sin superposiciones.
@@ -22,6 +22,12 @@
   - Animación visual del recorrido de la cadena por el autómata.
   - Visualización en tiempo real del estado de la **Pila** (tope, fondo y Z₀).
   - Trazado de la ruta de ejecución.
+- **Máquinas de Turing (MT)**:
+  - De 1 a 4 cintas; la entrada va en la cinta 1 y las demás arrancan en blanco (`B`).
+  - Alfabeto de cinta C = Σ ∪ {B} ∪ auxiliares, movimientos `I` / `D` / `N`.
+  - Rótulos con la notación de la cursada: `a,B/<a,D><X,D>`.
+  - Animación de las cintas: la tira se desliza bajo la cabeza de lectura/escritura, la celda escrita destella y se muestra la configuración α₁ eᵢ α₂.
+  - Detecta no determinismo, movimientos a izquierda de la celda de inicio y MT que no se detienen (corte a los 1000 pasos).
 - **100% Responsive**: Diseñado con un layout adaptable para funcionar perfectamente en computadoras de escritorio, tablets y teléfonos móviles.
 
 ## 🚀 Cómo usarlo
@@ -59,16 +65,19 @@ js/
   engine/             Lógica pura, sin DOM (testeable con node)
     afd.js            simulateAFD()
     apd.js            simulateAPD(), findConflict(), apdLabel()
+    mt.js             simulateMT(), findConflictMT(), mtLabel(), configuration()
     examples.js       Autómatas de ejemplo
+    automata.js       Registro de tipos: simulate + label + example por tipo
   ui/
     interaction.js    Pan, zoom, arrastre y clics en el lienzo
     canvas.js         Dibujo SVG de estados y aristas
     panel.js          Listas, traza, pila visual, toasts
     modals.js         Modales para crear transiciones
+    tape.js           Cintas animadas de la MT
 tests/engine.test.mjs Chequeos del motor
 ```
 
-Para agregar un nuevo tipo de autómata (p. ej. AFND o Máquina de Turing): un `simulateX()` en `js/engine/`, un ejemplo en `examples.js`, y el caso en `verifyString()` de `actions.js`.
+Para agregar un nuevo tipo de autómata (p. ej. AFND o ALA): un `simulateX()` en `js/engine/`, un ejemplo en `examples.js`, su entrada en `automata.js`, el color en `base.css` (`.tipo { --type: … }`) y su modal de transición en `ui/modals.js`.
 
 ## 🛠️ Tecnologías Utilizadas
 
@@ -82,6 +91,7 @@ Para agregar un nuevo tipo de autómata (p. ej. AFND o Máquina de Turing): un `
 Este proyecto implementa las definiciones formales de la teoría de autómatas:
 - **AFD**: $\delta: E \times A \to E$
 - **APD**: $\delta: E \times (A \cup \{\varepsilon\}) \times P \to E \times P^*$
+- **MT** (k cintas): $\delta: E \times C^k \to E \times (C \times \{I, D, N\})^k$, con $C = A \cup \{B\} \cup \text{Auxiliares}$. La cinta tiene celda de inicio y es infinita a derecha; acepta al llegar a un estado final y rechaza si se detiene (δ indefinida) en uno no final.
 - Aceptación por **estado final** (no requiere pila vacía para APD).
 - Validación estricta del determinismo (evita mezclar transiciones $\varepsilon$ y normales con el mismo tope de pila).
 

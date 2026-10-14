@@ -33,3 +33,35 @@ assert.ok(findConflict(apd.transitions, 3, 'b', 'Z'));   // ya hay ε con tope Z
 assert.ok(!findConflict(apd.transitions, 1, 'b', 'Z'));
 
 console.log('engine OK');
+
+// MT de 2 cintas: aⁿbⁿc²ⁿ (ejemplo de la filmina)
+import { simulateMT, findConflictMT, mtLabel, mtDelta, configuration } from '../js/engine/mt.js';
+import { exampleMT } from '../js/engine/examples.js';
+const mt = exampleMT(0, 0);
+const runM = s => simulateMT(mt, s);
+for (const s of ['abcc', 'aabbcccc', 'aaabbbcccccc']) assert.equal(runM(s).result, 'accepted', s);
+for (const s of ['', 'abc', 'aabbccc', 'abbcc', 'aabcccc', 'abccc', 'ba']) assert.equal(runM(s).result, 'rejected', s);
+assert.equal(runM('abd').result, 'rejected');
+assert.deepEqual(runM('abcc').trace.at(-1).tapes[1], ['X', 'A', 'B']);
+assert.equal(mtLabel(mt.transitions[0]), 'a,B/<a,N><X,D>');
+assert.equal(mtDelta(mt.transitions[0], 'q0', 'q1'), 'δ(q0, a, B) = (q1, (a,N), (X,D))');
+assert.ok(findConflictMT(mt.transitions, 2, ['a', 'B']));
+assert.ok(!findConflictMT(mt.transitions, 2, ['c', 'B']));
+
+// 1 cinta: corre a derecha hasta el blanco (acepta a*), izquierda desde la celda 0 rechaza, bucle → warning
+const one = (transitions, finals = [2]) => ({
+  alphabet: ['a'], tapeCount: 1, transitions,
+  states: [1, 2].map(id => ({ id, label: `q${id - 1}`, isStart: id === 1, isFinal: finals.includes(id) }))
+});
+const scan = one([{ id: 1, from: 1, to: 1, reads: ['a'], writes: ['X'], moves: ['D'] },
+                  { id: 2, from: 1, to: 2, reads: ['B'], writes: ['B'], moves: ['N'] }]);
+assert.equal(simulateMT(scan, 'aaa').result, 'accepted');
+assert.deepEqual(simulateMT(scan, 'aaa').trace.at(-1).tapes[0], ['X', 'X', 'X', 'B']);
+assert.equal(mtDelta(scan.transitions[0], 'q0', 'q0'), 'δ(q0, a) = (q0, X, D)');
+assert.match(simulateMT(one([{ id: 1, from: 1, to: 2, reads: ['a'], writes: ['a'], moves: ['I'] }]), 'a').msg, /izquierda/);
+assert.equal(simulateMT(one([{ id: 1, from: 1, to: 1, reads: ['B'], writes: ['B'], moves: ['N'] }]), '').result, 'warning');
+assert.equal(simulateMT({ ...scan, alphabet: ['a', 'B'] }, 'a').result, 'warning');
+assert.equal(configuration(['X', 'a', 'b', 'B'], 1, 'q2'), 'X q2 ab');
+assert.equal(configuration(['X', 'X'], 2, 'q1'), 'XX q1 B');
+
+console.log('MT OK');

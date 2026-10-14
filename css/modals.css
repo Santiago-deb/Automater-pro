@@ -33,6 +33,7 @@
 }
 .modal-subtitle span { color: var(--accent); font-weight: 700; }
 .modal-subtitle span.stack { color: var(--stack); }
+.modal-subtitle span.tape { color: var(--tape); }
 
 .symbol-grid {
   display: grid;
@@ -81,6 +82,17 @@
 }
 
 .modal-section { margin-bottom: 16px; }
+.tape-rule {
+  display: grid;
+  grid-template-columns: 28px 1fr auto 1fr 64px;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+.tape-rule select { padding: 8px 6px; text-align: center; }
 .modal-section-label {
   font-size: 10px;
   color: var(--fg-muted);
@@ -118,3 +130,4 @@
 .toast.error { border-color: var(--danger); color: var(--danger); }
 .toast.success { border-color: var(--accent); color: var(--accent); }
 .toast.stack { border-color: var(--stack); color: var(--stack); }
+.toast.tape { border-color: var(--tape); color: var(--tape); }

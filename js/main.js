@@ -6,11 +6,12 @@ import { interaction } from './ui/interaction.js';
 import { canvas } from './ui/canvas.js';
 import { panel } from './ui/panel.js';
 import { modals } from './ui/modals.js';
+import { tapeView } from './ui/tape.js';
 
 const $ = id => document.getElementById(id);
 const parseList = value => value.split(',').map(s => s.trim()).filter(s => s.length > 0);
 
-const App = Object.assign({ state: createState() }, actions, interaction, canvas, panel, modals, {
+const App = Object.assign({ state: createState() }, actions, interaction, canvas, panel, modals, tapeView, {
   init() {
     this.svg = $('canvas');
     this.viewport = $('viewport');
@@ -47,6 +48,8 @@ const App = Object.assign({ state: createState() }, actions, interaction, canvas
     on('alphabetInput', 'input', e => { this.state.alphabet = parseList(e.target.value); this.renderTransList(); });
     on('stackAlphabetInput', 'input', e => { this.state.stackAlphabet = parseList(e.target.value); this.renderTransList(); });
     on('initialStackInput', 'input', e => { this.state.initialStackSymbol = e.target.value.trim(); this.renderTransList(); });
+    on('tapeAlphabetInput', 'input', e => { this.state.tapeAlphabet = parseList(e.target.value); });
+    on('tapeCountInput', 'change', e => this.setTapeCount(parseInt(e.target.value)));
 
     // Verificación y acciones del header
     on('btnVerify', 'click', () => this.verifyString());
@@ -60,8 +63,11 @@ const App = Object.assign({ state: createState() }, actions, interaction, canvas
     on('stackModalCancel', 'click', () => this.closeStackModal());
     on('stackModal', 'click', e => { if (e.target.id === 'stackModal') this.closeStackModal(); });
     on('stackModalConfirm', 'click', () => this.confirmStackTransition());
+    on('tapeModalCancel', 'click', () => this.closeTapeModal());
+    on('tapeModal', 'click', e => { if (e.target.id === 'tapeModal') this.closeTapeModal(); });
+    on('tapeModalConfirm', 'click', () => this.confirmTapeTransition());
     document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') { this.closeSymbolModal(); this.closeStackModal(); }
+      if (e.key === 'Escape') { this.closeSymbolModal(); this.closeStackModal(); this.closeTapeModal(); }
     });
   }
 });

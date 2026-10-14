@@ -88,9 +88,9 @@
   color: var(--bg-deep);
   box-shadow: 0 0 14px var(--accent-glow);
 }
-.type-btn.active.apd {
-  background: var(--stack);
-  box-shadow: 0 0 14px var(--stack-glow);
+.type-btn.active:is(.apd, .mt) {
+  background: var(--type);
+  box-shadow: 0 0 14px var(--type-glow);
 }
 
 .header-actions { display: flex; gap: 8px; flex-shrink: 0; }
@@ -125,3 +125,5 @@
 .btn-block { width: 100%; justify-content: center; }
 .btn-stack { background: var(--stack); color: var(--bg-deep); border-color: var(--stack); font-weight: 600; }
 .btn-stack:hover { background: var(--stack); color: var(--bg-deep); box-shadow: 0 0 20px var(--stack-glow); }
+.btn-tape { background: var(--tape); color: var(--bg-deep); border-color: var(--tape); font-weight: 600; }
+.btn-tape:hover { background: var(--tape); color: var(--bg-deep); box-shadow: 0 0 20px var(--tape-glow); }
