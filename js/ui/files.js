@@ -1,5 +1,5 @@
 // Archivo: autoguardado por tipo en el navegador, guardar/abrir .json,
-// exportar el diagrama como SVG o PNG (también con fondo blanco para imprimir)
+// exportar el diagrama como PNG (también con fondo blanco para imprimir)
 // y un nivel de "Deshacer" para las acciones que reemplazan el tablero.
 import { AUTOMATA } from '../engine/automata.js';
 
@@ -190,15 +190,10 @@ export const files = {
     return { text: new XMLSerializer().serializeToString(svg), w, h };
   },
 
-  async exportImage(format, print = false) {
+  async exportImage(print = false) {
     if (!this.state.states.length) return this.showToast('El tablero está vacío: no hay nada para exportar', 'error');
     const { text, w, h } = this.buildExportSVG(print);
     const name = `automater-${this.state.automatonType}${print ? '-imprimir' : ''}-${stamp()}`;
-    if (format === 'svg') {
-      download(new Blob([text], { type: 'image/svg+xml' }), `${name}.svg`);
-      this.showToast('Diagrama exportado como SVG', 'success');
-      return;
-    }
     const img = new Image();
     img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(text)}`;
     try { await img.decode(); } catch { return this.showToast('No se pudo generar la imagen', 'error'); }
@@ -237,12 +232,10 @@ export const files = {
 
     const actions = {
       new: () => this.clearAll(),
-      example: () => { this.remember(); this.loadExample(); this.toastWithUndo('Se cargó el ejemplo', 'success'); },
       open: () => this.openFile(),
       save: () => this.saveFile(),
-      png: () => this.exportImage('png'),
-      print: () => this.exportImage('png', true),
-      svg: () => this.exportImage('svg', true)
+      png: () => this.exportImage(),
+      print: () => this.exportImage(true)
     };
     menu.querySelectorAll('[data-file]').forEach(item =>
       item.addEventListener('click', () => { close(); actions[item.dataset.file](); }));

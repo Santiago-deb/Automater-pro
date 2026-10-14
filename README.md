@@ -29,8 +29,8 @@
   - Animación de las cintas: la tira se desliza bajo la cabeza de lectura/escritura, la celda escrita destella y se muestra la configuración α₁ eᵢ α₂.
   - Detecta no determinismo, movimientos a izquierda de la celda de inicio y MT que no se detienen (corte a los 1000 pasos).
 - **Menú Archivo** (botón *Archivo* del header):
-  - Nuevo tablero, cargar ejemplo, abrir y guardar el autómata como `.json`.
-  - Exportar el diagrama como PNG (como se ve o con fondo blanco para imprimir) o SVG.
+  - Nuevo tablero, abrir y guardar el autómata como `.json`.
+  - Exportar el diagrama como PNG (como se ve o con fondo blanco para imprimir).
   - Autoguardado en el navegador, separado por tipo: al volver a la página o cambiar de tipo, sigue lo último que había.
   - *Deshacer* en el aviso al limpiar, cargar el ejemplo o abrir un archivo.
 - **Ayuda integrada** (botón *Ayuda* del header):
@@ -86,7 +86,7 @@ js/
     tape.js           Cintas animadas de la MT
     help.js           Modal de Ayuda y formulario de contacto
     tour.js           Recorrido guiado (pasos y posicionamiento)
-    files.js          Menú Archivo: autoguardado, abrir/guardar .json, exportar imagen, deshacer
+    files.js          Menú Archivo: autoguardado, abrir/guardar .json, exportar PNG, deshacer
 tests/engine.test.mjs Chequeos del motor
 ```
 

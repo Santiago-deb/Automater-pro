@@ -102,7 +102,7 @@ const STEPS = [
   {
     target: '#btnFile',
     title: 'Archivo',
-    text: 'Empezar de cero, cargar un ejemplo, abrir o guardar tu autómata como archivo, y exportar el diagrama como imagen (también con fondo blanco, para imprimir la entrega). Lo que haces se guarda solo en este navegador.'
+    text: 'Empezar de cero, abrir o guardar tu autómata como archivo, y exportar el diagrama como imagen (también con fondo blanco, para imprimir la entrega).'
   },
   {
     target: ['#btnExample', '#btnClear'],
