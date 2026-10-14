@@ -39,7 +39,7 @@ export const tapeView = {
     let view = wrap.querySelector('.tape-view');
     if (!view || Number(view.dataset.tapes) !== k) view = buildView(wrap, k);
 
-    // Configuración α₁ eᵢ α₂ de la cinta 1 (notación del apunte)
+    // Configuración α₁ eᵢ α₂ de la cinta 1 (notación de la cátedra)
     const label = this.getState(step.state)?.label ?? '?';
     view.querySelector('.config-value').textContent = configuration(step.tapes[0], step.heads[0], label);
 

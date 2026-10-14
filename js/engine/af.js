@@ -1,5 +1,5 @@
 // Autómatas finitos: AFND, pasaje AFND → AFD, minimización y armado de
-// diagramas. Teoría: Apunte 2 y "Clase AFND a AFD y AFD Min" (UNCPBA).
+// diagramas. Teoría de la cátedra (UNCPBA).
 // Puro: no toca el DOM. Un autómata es { states, transitions, alphabet } con
 // states = [{ id, label, isStart, isFinal, x?, y? }] y transitions = [{ id, from, to, symbol }].
 import { simulateAFD } from './afd.js';

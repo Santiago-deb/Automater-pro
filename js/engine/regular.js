@@ -1,5 +1,5 @@
-// Gramáticas regulares y expresiones regulares (Apunte 3, UNCPBA).
-// - AF → GR lineal a derecha con el algoritmo del apunte, y derivaciones.
+// Gramáticas regulares y expresiones regulares (teoría de la cátedra, UNCPBA).
+// - AF → GR lineal a derecha con el algoritmo de la cátedra, y derivaciones.
 // - GR lineal a derecha → AF (puede salir AFND).
 // - ER con la notación de la cátedra (+ unión, . o yuxtaposición concatenación,
 //   * clausura, λ cadena vacía, ∅ vacío) → AF sin λ-transiciones (Glushkov).

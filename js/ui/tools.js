@@ -96,7 +96,7 @@ const TABLE_FORMATS = {
   },
   mt: {
     example: 'e0 a B a N X D e1\ne0 b B b N X D e2\ne0 B B B N B N e5\ne1 a B a D 1 D e1\ne1 b B b N B N e2\ne1 c B c N B I e3\ne2 b B b D 1 D e2\ne2 c B c N B I e3\ne3 c 1 c D 1 I e3\ne3 d X d N X D e4\ne4 d 1 d D 1 D e4\ne4 B B B N B N e5\nFinales: e5',
-    hint: 'Una fila por transición, como en el Práctico 6: estado, lo que lee cada cinta, el par nuevo símbolo / movimiento (I, D, N) de cada cinta y el nuevo estado. Con k cintas son 3k + 2 columnas. Marca los finales con *e5 o con una línea "Finales: e5".'
+    hint: 'Una fila por transición: estado, lo que lee cada cinta, el par nuevo símbolo / movimiento (I, D, N) de cada cinta y el nuevo estado. Con k cintas son 3k + 2 columnas. Marca los finales con *e5 o con una línea "Finales: e5".'
   }
 };
 
@@ -261,7 +261,7 @@ export const tools = {
     };
 
     return [
-      ...this.intro('Varias cadenas', 'Prueba muchas cadenas de una vez y mira cuáles acepta, en qué estado se detiene y qué traduce. Es lo que piden TP2 ej. 1 y 2, TP4 ej. 6b y TP6 ej. 1a.'),
+      ...this.intro('Varias cadenas', 'Prueba muchas cadenas de una vez y mira cuáles acepta, en qué estado se detiene y qué traduce.'),
       field('Cadenas, una por línea', input, 'λ es la cadena vacía. Opcional: + adelante si debería aceptarse y - si debería rechazarse, para controlar tu diseño.'),
       chips(input, ['λ']),
       h('div', { class: 'tool-actions' }, h('button', { class: 'btn btn-primary', onclick: run }, 'Probar cadenas')),
@@ -327,7 +327,7 @@ export const tools = {
     };
 
     return [
-      ...this.intro('Explorar el lenguaje', 'Lista todas las cadenas que acepta, ordenadas por longitud. Sirve para los ejercicios de "determine el lenguaje que reconoce" (TP2 ej. 1b, TP4 ej. 1, TP6 ej. 1b).'),
+      ...this.intro('Explorar el lenguaje', 'Lista todas las cadenas que acepta, ordenadas por longitud. Sirve para los ejercicios de "determine el lenguaje que reconoce".'),
       h('div', { class: 'row-inline' }, field('Longitud máxima', len), h('button', { class: 'btn btn-primary', onclick: run }, 'Listar cadenas aceptadas')),
       count,
       results
@@ -400,7 +400,7 @@ export const tools = {
 
   // ---------- AFND → AFD ----------
   toolSubset() {
-    const head = this.intro('AFND → AFD', 'Pasaje con el algoritmo de la cátedra: cada estado del AFD es un conjunto [e1,…,ek] de estados del AFND y δD([…], a) es la unión de δND de cada uno. Solo se generan los conjuntos alcanzables desde [e0] (TP2 ej. 11 y adicional 4).');
+    const head = this.intro('AFND → AFD', 'Pasaje con el algoritmo de la cátedra: cada estado del AFD es un conjunto [e1,…,ek] de estados del AFND y δD([…], a) es la unión de δND de cada uno. Solo se generan los conjuntos alcanzables desde [e0].');
     const notice = this.needsAF();
     if (notice) return [...head, notice];
     const r = subsetConstruction(this.state);
@@ -438,7 +438,7 @@ export const tools = {
 
   // ---------- Minimizar ----------
   toolMinimize() {
-    const head = this.intro('Minimizar AFD', 'Algoritmo de clase: se eliminan los estados inalcanzables y los muertos, se arma Π0 = {no finales, finales} y se parte cada grupo según a qué grupo va cada símbolo, hasta que Πk+1 = Πk (TP2 ej. 12 y adicional 5).');
+    const head = this.intro('Minimizar AFD', 'Algoritmo de clase: se eliminan los estados inalcanzables y los muertos, se arma Π0 = {no finales, finales} y se parte cada grupo según a qué grupo va cada símbolo, hasta que Πk+1 = Πk.');
     const notice = this.needsAF();
     if (notice) return [...head, notice];
     const r = minimize(this.state);
@@ -495,7 +495,7 @@ export const tools = {
 
   // ---------- Gramática regular ----------
   toolGrammar() {
-    const out = this.intro('Gramática regular', 'Del autómata a una gramática lineal a derecha con el algoritmo del Apunte 3, con derivaciones de cadenas; y de una gramática al autómata (TP3 ej. 1, 2 y 4).');
+    const out = this.intro('Gramática regular', 'Del autómata a una gramática lineal a derecha con el algoritmo de la cátedra, con derivaciones de cadenas; y de una gramática al autómata.');
 
     out.push(h('h5', {}, 'Del autómata a la gramática'));
     const notice = this.needsAF();
@@ -581,7 +581,7 @@ export const tools = {
     re.addEventListener('keydown', e => { if (e.key === 'Enter') test(); });
 
     return [
-      ...this.intro('Expresión regular', 'Con la notación de la cátedra: + es unión, . (o nada) concatenación, * clausura, λ la cadena vacía y ∅ el vacío. Para TP3 ej. 5 a 9.'),
+      ...this.intro('Expresión regular', 'Con la notación de la cátedra: + es unión, . (o nada) concatenación, * clausura, λ la cadena vacía y ∅ el vacío.'),
       field('Expresión regular', re),
       chips(re, [LAMBDA, '∅', '+', '.', '*', '(', ')']),
       err,
@@ -622,7 +622,7 @@ export const tools = {
     };
 
     return [
-      ...this.intro('Desde una tabla δ', 'Para los ejercicios que empiezan con "Dado el siguiente autómata…": escribe o pega la tabla y el diagrama se dibuja solo (TP2 ej. 12, TP4 ej. 1, TP6 ej. 1 y 3).'),
+      ...this.intro('Desde una tabla δ', 'Para los ejercicios que empiezan con "Dado el siguiente autómata…": escribe o pega la tabla y el diagrama se dibuja solo.'),
       seg,
       field('Tabla', text, fmt.hint),
       chips(text, type === 'afd' ? ['→', '*', '-', '{', '}'] : type === 'apd' ? ['δ', LAMBDA] : ['B', 'I', 'D', 'N']),

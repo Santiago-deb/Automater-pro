@@ -32,12 +32,12 @@
 - **Herramientas para los TPs** (botón *Herramientas*):
   - **Varias cadenas**: prueba una lista de cadenas y muestra si se aceptan, dónde se detiene, la traducción (APD) o las cintas finales (MT). Con `+`/`-` adelante se compara contra lo esperado.
   - **Explorar el lenguaje**: lista todas las cadenas aceptadas hasta cierta longitud, para los ejercicios de "determine el lenguaje".
-  - **Definición formal**: tupla y tabla δ con la notación de la cátedra (en MT, columnas como el Práctico 6), para copiar como texto o como tabla para Word / Docs. En AF revisa δ incompleta (con opción de agregar estado trampa) y estados inalcanzables.
+  - **Definición formal**: tupla y tabla δ con la notación de la cátedra (en MT, una fila por transición con lo leído, el nuevo símbolo y el movimiento de cada cinta), para copiar como texto o como tabla para Word / Docs. En AF revisa δ incompleta (con opción de agregar estado trampa) y estados inalcanzables.
   - **AFND → AFD**: construcción de subconjuntos con las tablas δND y δD y el cálculo de cada celda.
   - **Minimizar AFD**: inalcanzables, muertos y particiones Π0, Π1… con la tabla de grupos de cada paso, como en clase.
-  - **Gramática regular**: AF → gramática lineal a derecha (algoritmo del Apunte 3) con derivaciones, y gramática → AF.
+  - **Gramática regular**: AF → gramática lineal a derecha (algoritmo de la cátedra) con derivaciones, y gramática → AF.
   - **Expresión regular**: pertenencia de cadenas, lenguaje hasta longitud n y AF equivalente (Glushkov), con la notación `+ . * λ ∅`.
-  - **Desde una tabla δ**: dibuja un AF, APD o MT a partir de su tabla (formato de los prácticos).
+  - **Desde una tabla δ**: dibuja un AF, APD o MT a partir de su tabla (escrita como tabla o como δ(…) = (…)).
 - **Archivo**: autoguardado por tipo en el navegador, guardar/abrir `.json`, exportar el diagrama como PNG (también con fondo blanco para imprimir) o SVG, y *Deshacer* después de limpiar o reemplazar el tablero.
 - **Ayuda integrada** (botón *Ayuda* del header):
   - **Tutorial**: recorrido guiado por toda la página (tablero, herramientas, alfabetos, estados, transiciones y verificación). Detecta si se usa con mouse o con pantalla táctil y explica los gestos de cada uno; los textos se adaptan al tipo de autómata abierto.
@@ -52,7 +52,7 @@ Está online en Vercel (se deploya solo con cada push a `main`). Para correrlo l
 python3 -m http.server 8000   # y abrir http://localhost:8000
 ```
 
-Tests (sin dependencias): `node tests/engine.test.mjs && node tests/tools.test.mjs`. Los de herramientas usan ejercicios reales de los prácticos y filminas.
+Tests (sin dependencias): `node tests/engine.test.mjs && node tests/tools.test.mjs`.
 
 ### Guía rápida:
 1. **Configurar Alfabetos**: En el panel lateral, define los símbolos de entrada (y de pila si es APD).

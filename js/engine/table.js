@@ -48,7 +48,7 @@ export function formalDefinition(type, a) {
     };
   }
 
-  // MT: columnas como en el Práctico 6
+  // MT: estado, lo leído en cada cinta, (nuevo símbolo, movimiento) por cinta y nuevo estado
   const k = a.tapeCount;
   const C = tapeSymbols(a);
   const headers = ['Estado', ...range(k).map(i => `C${i + 1}`), ...range(k).flatMap(i => [`C${i + 1} nuevo`, 'Mov.']), 'Nuevo estado'];
@@ -220,7 +220,7 @@ export function parseAPDTable(text, z0 = 'Z') {
   return { type: 'apd', alphabet, stackAlphabet, initialStackSymbol, automaton: base };
 }
 
-// MT: una fila por transición, como en el Práctico 6:
+// MT: una fila por transición:
 //   estado  C1..Ck leídos  (nuevo, mov) por cinta  nuevo estado
 //   e0      a  B           a N   X D               e1
 // Filas como "e5 - - - - - - -" solo declaran el estado.
