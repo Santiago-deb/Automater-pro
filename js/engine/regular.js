@@ -245,6 +245,129 @@ export function regexToAF(src) {
   return { automaton: buildAutomaton(rows, edges, alphabet), alphabet };
 }
 
+// ---------- AF → ER (eliminación de estados) ----------
+// Misma lógica que MTSolution (tesis de M. Martínez, UNCPBA), reescrita:
+// 1) Por cada final f se deja a f como único final.
+// 2) Se elimina cada estado s que no es ni el inicial ni f:
+//    R(p,q) := R(p,q) + R(p,s) R(s,s)* R(s,q) para cada predecesor p y sucesor q.
+// 3) Quedan i y f: S = R(i,i), U = R(i,f), T = R(f,f), V = R(f,i) y
+//    ER_f = S*U(T+VS*U)*; si el inicial es f, ER_f = S*.
+// 4) La ER es la unión de las ER_f.
+// Las expresiones se simplifican con ∅ y λ para que no crezcan de más.
+const EMPTY = { op: '∅' };
+const EPS = { op: 'λ' };
+const sameRe = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+const altsOf = n => (n.op === '+' ? [...altsOf(n.a), ...altsOf(n.b)] : [n]);
+
+function alt(a, b) {
+  if (a.op === '∅') return b;
+  if (b.op === '∅') return a;
+  if (altsOf(a).some(x => sameRe(x, b))) return a;
+  return { op: '+', a, b };
+}
+function cat(a, b) {
+  if (a.op === '∅' || b.op === '∅') return EMPTY;
+  if (a.op === 'λ') return b;
+  if (b.op === 'λ') return a;
+  return { op: '.', a, b };
+}
+function star(a) {
+  if (a.op === '∅' || a.op === 'λ') return EPS;
+  if (a.op === '*') return a;
+  // (λ + x)* = x*
+  const rest = altsOf(a).filter(x => x.op !== 'λ');
+  if (rest.length < altsOf(a).length) return star(rest.reduce(alt, EMPTY));
+  return { op: '*', a };
+}
+
+// Notación de la cátedra: + unión, yuxtaposición (o . si hay símbolos de más de
+// un carácter), * clausura.
+export function regexText(n, dot = false) {
+  const wrap = (x, cond) => (cond ? `(${regexText(x, dot)})` : regexText(x, dot));
+  switch (n.op) {
+    case '∅': return '∅';
+    case 'λ': return LAMBDA;
+    case 'sym': return n.c;
+    case '+': return `${regexText(n.a, dot)} + ${regexText(n.b, dot)}`;
+    case '.': return wrap(n.a, n.a.op === '+') + (dot ? '.' : '') + wrap(n.b, n.b.op === '+');
+    case '*': return `${wrap(n.a, n.a.op !== 'sym' || n.a.c.length > 1)}*`;
+  }
+}
+
+export function afToRegex({ states, transitions, alphabet }) {
+  const start = states.find(s => s.isStart);
+  if (!start) return { error: 'Define un estado inicial.' };
+  const finals = states.filter(s => s.isFinal);
+  if (!finals.length) return { error: 'Marca al menos un estado final.' };
+
+  const dot = alphabet.some(a => a.length > 1);
+  const label = id => states.find(s => s.id === id).label;
+  const show = n => regexText(n, dot);
+  const reach = (from, edges) => {
+    const seen = new Set([from]);
+    const stack = [from];
+    while (stack.length) {
+      const id = stack.pop();
+      for (const [a, b] of edges) if (a === id && !seen.has(b)) { seen.add(b); stack.push(b); }
+    }
+    return seen;
+  };
+  const pairs = transitions.map(t => [t.from, t.to]);
+  const fromStart = reach(start.id, pairs);
+
+  const parts = [];
+  for (const f of finals) {
+    if (!fromStart.has(f.id)) continue;
+    // Solo importan los estados en algún camino del inicial a f
+    const toF = reach(f.id, pairs.map(([a, b]) => [b, a]));
+    const useful = states.filter(s => fromStart.has(s.id) && toF.has(s.id)).map(s => s.id);
+
+    const R = new Map(); // "p q" → expresión
+    const key = (p, q) => `${p} ${q}`;
+    const get = (p, q) => R.get(key(p, q)) ?? EMPTY;
+    for (const t of transitions) {
+      if (useful.includes(t.from) && useful.includes(t.to)) {
+        R.set(key(t.from, t.to), alt(get(t.from, t.to), { op: 'sym', c: t.symbol }));
+      }
+    }
+
+    const steps = [];
+    let alive = [...useful];
+    for (const s of useful.filter(id => id !== start.id && id !== f.id)) {
+      alive = alive.filter(id => id !== s);
+      const loop = star(get(s, s));
+      const changes = [];
+      for (const p of alive) {
+        if (get(p, s).op === '∅') continue;
+        for (const q of alive) {
+          if (get(s, q).op === '∅') continue;
+          const via = cat(cat(get(p, s), loop), get(s, q));
+          R.set(key(p, q), alt(get(p, q), via));
+          changes.push(`${label(p)} → ${label(q)}: ${show(get(p, q))}`);
+        }
+      }
+      for (const id of useful) { R.delete(key(id, s)); R.delete(key(s, id)); }
+      steps.push({ state: label(s), changes });
+    }
+
+    const S = get(start.id, start.id);
+    let er, stuv;
+    if (f.id === start.id) {
+      er = star(S);
+      stuv = { S: show(S) };
+    } else {
+      const U = get(start.id, f.id), T = get(f.id, f.id), V = get(f.id, start.id);
+      const Ss = star(S);
+      er = cat(cat(Ss, U), star(alt(T, cat(cat(V, Ss), U))));
+      stuv = { S: show(S), U: show(U), T: show(T), V: show(V) };
+    }
+    parts.push({ final: f.label, steps, stuv, regex: show(er), tree: er });
+  }
+
+  const tree = parts.map(p => p.tree).reduce(alt, EMPTY);
+  return { regex: show(tree), parts: parts.map(({ tree, ...p }) => p) };
+}
+
 // Pertenencia de una cadena a L(ER) simulando el autómata de Glushkov.
 export function regexMatcher(src) {
   const { automaton } = regexToAF(src);

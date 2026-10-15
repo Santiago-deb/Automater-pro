@@ -2,7 +2,7 @@
 // Correr con: node tests/tools.test.mjs
 import assert from 'node:assert/strict';
 import { simulateAF, isDeterministic, subsetConstruction, minimize, allStrings, maxLengthFor } from '../js/engine/af.js';
-import { afToGrammar, grammarText, derivation, grammarToAF, regexMatcher, regexToAF, parseRegex } from '../js/engine/regular.js';
+import { afToGrammar, grammarText, derivation, grammarToAF, regexMatcher, regexToAF, parseRegex, afToRegex } from '../js/engine/regular.js';
 import { parseAFTable, parseAPDTable, parseMTTable, formalDefinition, parseBatch, tableText } from '../js/engine/table.js';
 import { simulateAPD } from '../js/engine/apd.js';
 import { simulateMT } from '../js/engine/mt.js';
@@ -119,6 +119,30 @@ assert.throws(() => parseRegex('(a+b'), /paréntesis/);
 assert.throws(() => parseRegex('a++b'), /fuera de lugar/);
 const reAF = regexToAF('(a+b)*abb').automaton;
 assert.ok(accepts(reAF, 'babb') && !accepts(reAF, 'abba'));
+
+// --- AF → ER por eliminación de estados ---
+// La ER obtenida tiene que generar exactamente el lenguaje del AF
+const sameAsRegex = (a, n = 7) => {
+  const r = afToRegex(a);
+  assert.ok(!r.error, r.error);
+  const m = regexMatcher(r.regex);
+  for (const w of allStrings(a.alphabet, n)) assert.equal(m(w), accepts(a, w), `${r.regex} con "${w}"`);
+  return r;
+};
+for (const a of [ndA, tp211, l4, g2a.automaton, reAF, sub.automaton]) sameAsRegex(a);
+for (const src of ['(0*10)*', '(011 + 11)*(00)*', '01*10*(11*0)*', '(aa)*cb*b', 'λ + a', 'a*b + ba*']) {
+  sameAsRegex(regexToAF(src).automaton, 6);
+}
+// Dos estados: S*U(T+VS*U)*
+const two = parseAFTable(`δ a b\n→p p q\n*q p q`).automaton;
+const r2 = sameAsRegex(two);
+assert.deepEqual(r2.parts[0].stuv, { S: 'a', U: 'b', T: 'b', V: 'a' });
+assert.equal(r2.regex, 'a*b(b + aa*b)*');
+// Inicial final con bucle: S*
+assert.equal(afToRegex(parseAFTable(`δ a\n→*p p`).automaton).regex, 'a*');
+// Sin camino a un final: ∅
+assert.equal(afToRegex(parseAFTable(`δ a\n→p p\n*q q`).automaton).regex, '∅');
+assert.match(afToRegex(parseAFTable(`δ a\n→p p`).automaton).error, /final/);
 
 // --- Tablas de APD y MT ---
 const apd = parseAPDTable(`δ(e0, a, Z0) = (e0, AZ0)
