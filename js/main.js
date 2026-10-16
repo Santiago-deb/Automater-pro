@@ -30,6 +30,7 @@ const App = Object.assign({ state: createState() }, actions, interaction, canvas
     this.bindFileMenu();
     this.bindTools();
     this.restoreSession();
+    this.driveResume(); // vuelta del inicio de sesión con Google por redirección
     this.updateHint();
     this.render();
     this.commitHistory(); // foto inicial: lo que se abrió no se puede deshacer
