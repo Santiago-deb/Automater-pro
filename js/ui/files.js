@@ -1,6 +1,7 @@
-// Archivo: autoguardado por tipo en el navegador, guardar/abrir .json (y abrir .MT de MTSolution),
-// exportar el diagrama como SVG o PNG (también con fondo blanco para imprimir)
-// y un nivel de "Deshacer" para las acciones que reemplazan el tablero.
+// Archivo: autoguardado por tipo en el navegador, guardar/abrir .json (y abrir
+// .MT de MTSolution), compartirlo (menú nativo del celular), exportar el diagrama
+// como PNG (también con fondo blanco para imprimir) y un nivel de "Deshacer" para
+// las acciones que reemplazan el tablero. Google Drive está en drive.js.
 import { AUTOMATA } from '../engine/automata.js';
 import { parseMTFile } from '../engine/table.js';
 
@@ -78,7 +79,7 @@ function pickFiles(multiple, onPick) {
 
 const stamp = () => new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '');
 
-function validAutomaton(data) {
+export function validAutomaton(data) {
   return data && AUTOMATA[data.type] && Array.isArray(data.states) && Array.isArray(data.transitions) &&
     data.states.every(s => Number.isFinite(s.id) && typeof s.label === 'string') &&
     data.transitions.every(t => data.states.some(s => s.id === t.from) && data.states.some(s => s.id === t.to));
@@ -171,6 +172,25 @@ export const files = {
     this.showToast('Autómata guardado en tus descargas', 'success');
   },
 
+  // Menú "Compartir" del sistema (WhatsApp, Gmail, Drive…) con el .json.
+  // Chrome en Android no deja compartir .json, así que se prueba también como .txt
+  // (Abrir archivo acepta los dos); si no se puede compartir archivos, se descarga.
+  async shareFile() {
+    const text = JSON.stringify(this.serialize(), null, 2);
+    const base = `automater-${this.state.automatonType}-${stamp()}`;
+    const file = [new File([text], `${base}.json`, { type: 'application/json' }), new File([text], `${base}.txt`, { type: 'text/plain' })]
+      .find(f => navigator.canShare?.({ files: [f] }));
+    if (!file) {
+      download(new Blob([text], { type: 'application/json' }), `${base}.json`);
+      return this.showToast('Este navegador no permite compartir archivos: se descargó el .json', 'success');
+    }
+    try {
+      await navigator.share({ files: [file], title: 'Autómata de Automater Pro' });
+    } catch (e) {
+      if (e.name !== 'AbortError') this.showToast('No se pudo compartir el archivo', 'error');
+    }
+  },
+
   // Se pueden elegir varios archivos a la vez: la MT y los módulos que llama.
   openFile() {
     pickFiles(true, async files => {
@@ -257,15 +277,10 @@ export const files = {
     return { text: new XMLSerializer().serializeToString(svg), w, h };
   },
 
-  async exportImage(format, print = false) {
+  async exportImage(print = false) {
     if (!this.state.states.length) return this.showToast('El tablero está vacío: no hay nada para exportar', 'error');
     const { text, w, h } = this.buildExportSVG(print);
     const name = `automater-${this.state.automatonType}${print ? '-imprimir' : ''}-${stamp()}`;
-    if (format === 'svg') {
-      download(new Blob([text], { type: 'image/svg+xml' }), `${name}.svg`);
-      this.showToast('Diagrama exportado como SVG', 'success');
-      return;
-    }
     const img = new Image();
     img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(text)}`;
     try { await img.decode(); } catch { return this.showToast('No se pudo generar la imagen', 'error'); }
@@ -286,16 +301,17 @@ export const files = {
   bindFileMenu() {
     const btn = $('btnFile');
     const menu = $('fileMenu');
-    const close = () => { menu.hidden = true; btn.setAttribute('aria-expanded', 'false'); };
+    const close = this.closeFileMenu = () => { menu.hidden = true; btn.setAttribute('aria-expanded', 'false'); };
     const open = () => {
       menu.hidden = false;
       btn.setAttribute('aria-expanded', 'true');
       menu.querySelector('button').focus();
+      this.renderDrive();
     };
     btn.addEventListener('click', e => { e.stopPropagation(); menu.hidden ? open() : close(); });
     document.addEventListener('click', e => { if (!menu.hidden && !menu.contains(e.target)) close(); });
     menu.addEventListener('keydown', e => {
-      const items = [...menu.querySelectorAll('button')];
+      const items = [...menu.querySelectorAll('button')].filter(b => b.offsetParent);
       const i = items.indexOf(document.activeElement);
       if (e.key === 'ArrowDown') { e.preventDefault(); items[(i + 1) % items.length].focus(); }
       if (e.key === 'ArrowUp') { e.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); }
@@ -304,14 +320,19 @@ export const files = {
 
     const actions = {
       new: () => this.clearAll(),
-      example: () => { this.remember(); this.loadExample(); this.toastWithUndo('Se cargó el ejemplo', 'success'); },
       open: () => this.openFile(),
       save: () => this.saveFile(),
-      png: () => this.exportImage('png'),
-      print: () => this.exportImage('png', true),
-      svg: () => this.exportImage('svg', true)
+      png: () => this.exportImage(),
+      print: () => this.exportImage(true),
+      share: () => this.shareFile(),
+      login: async () => { const s = await this.driveLogin(); this.showToast(`Sesión iniciada como ${s.user.emailAddress}`, 'success'); },
+      driveSave: () => this.driveSave(),
+      logout: () => this.driveLogout()
     };
     menu.querySelectorAll('[data-file]').forEach(item =>
-      item.addEventListener('click', () => { close(); actions[item.dataset.file](); }));
+      item.addEventListener('click', () => {
+        close();
+        Promise.resolve(actions[item.dataset.file]()).catch(e => this.showToast(e.message, 'error'));
+      }));
   }
 };

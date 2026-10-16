@@ -38,7 +38,13 @@
   - **Gramática regular**: AF → gramática lineal a derecha (algoritmo de la cátedra) con derivaciones, y gramática → AF.
   - **Expresión regular**: pertenencia de cadenas, lenguaje hasta longitud n y AF equivalente (Glushkov), con la notación `+ . * λ ∅`.
   - **Desde una tabla δ**: dibuja un AF, APD o MT a partir de su tabla (escrita como tabla o como δ(…) = (…)).
-- **Archivo**: autoguardado por tipo en el navegador, guardar/abrir `.json`, importar `.MT` de MTSolution (también MT compuestas con sub-máquinas `@alias`: se eligen la MT y sus módulos juntos), exportar el diagrama como PNG (también con fondo blanco para imprimir) o SVG, y *Deshacer* después de limpiar o reemplazar el tablero.
+- **Menú Archivo** (botón *Archivo* del header):
+  - Nuevo tablero, abrir y guardar el autómata como `.json`. *Abrir archivo* también importa los `.MT` de MTSolution, incluidas las MT compuestas con sub-máquinas `@alias` (se eligen la MT y sus módulos juntos).
+  - *Compartir…*: en el celular abre el menú del sistema para mandar el `.json` por cualquier app (en Chrome de Android va como `.txt`; *Abrir archivo* acepta los dos). Si el navegador no puede compartir archivos, lo descarga.
+  - *Iniciar sesión con Google*: guarda los autómatas en una carpeta "Automater Pro" del Drive del usuario y los lista en *Mis autómatas*. Sin backend: login con Google Identity Services y API de Drive desde el navegador, con el permiso `drive.file` (la app solo ve los archivos que creó). El Client ID está en `js/ui/drive.js`; sus orígenes autorizados se configuran en Google Cloud (proyecto "Automater-Pro").
+  - Exportar el diagrama como PNG (como se ve o con fondo blanco para imprimir).
+  - Autoguardado en el navegador, separado por tipo: al volver a la página o cambiar de tipo, sigue lo último que había.
+  - *Deshacer* en el aviso al limpiar, cargar el ejemplo o abrir un archivo.
 - **Ayuda integrada** (botón *Ayuda* del header):
   - **Tutorial**: recorrido guiado por toda la página (tablero, herramientas, alfabetos, estados, transiciones y verificación). Detecta si se usa con mouse o con pantalla táctil y explica los gestos de cada uno; los textos se adaptan al tipo de autómata abierto.
   - **Contacto**: formulario (correo, motivo y mensaje de hasta 600 caracteres) que llega por mail vía [FormSubmit](https://formsubmit.co), sin backend.
@@ -72,7 +78,8 @@ css/
   panel.css           Panel lateral: listas, prueba, traza y pila
   modals.css          Modales y toast
   help.css            Modal de ayuda, contacto y recorrido guiado
-  tools.css           Herramientas, menú Archivo y toast con acción
+  tools.css           Herramientas e indicador AFD/AFND
+  files.css           Menú Archivo y toast con Deshacer
   responsive.css      Breakpoints mobile
 js/
   main.js             Punto de entrada: arma `App` y conecta los eventos
@@ -96,7 +103,8 @@ js/
     help.js           Modal de Ayuda y formulario de contacto
     tour.js           Recorrido guiado (pasos y posicionamiento)
     tools.js          Modal de herramientas (una vista por herramienta)
-    files.js          Autoguardado, guardar/abrir, exportar imagen, deshacer
+    files.js          Menú Archivo: autoguardado, abrir/guardar/compartir .json, exportar PNG, deshacer
+    drive.js          Login con Google y autómatas en Google Drive (Mis autómatas)
 tests/                Chequeos del motor y de las herramientas
 ```
 
