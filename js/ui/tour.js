@@ -34,15 +34,22 @@ const STEPS = [
     target: '.tool-btn[data-mode="select"]',
     title: 'Seleccionar y mover',
     text: d => d === 'touch'
-      ? 'Con esta herramienta, toca un estado para seleccionarlo y arrástralo con el dedo para acomodarlo.'
-      : 'Con esta herramienta, haz clic en un estado para seleccionarlo y arrástralo para acomodarlo.'
+      ? 'Con esta herramienta, toca un estado para seleccionarlo y arrástralo con el dedo para acomodarlo. Tócalo dos veces para ver sus opciones: renombrarlo, hacerlo inicial o final, sacar una transición o eliminarlo.'
+      : 'Con esta herramienta, haz clic en un estado para seleccionarlo y arrástralo para acomodarlo. Para elegir varios, arrastra sobre un lugar vacío o usa Shift + clic (otra vez Shift + clic lo quita); se mueven juntos y Supr los borra. Doble clic en un estado abre sus opciones.'
+  },
+  {
+    target: '#btnUndo',
+    title: 'Deshacer y rehacer',
+    text: d => d === 'touch'
+      ? 'Estas flechas deshacen y rehacen los cambios del tablero.'
+      : 'Estas flechas deshacen y rehacen los cambios del tablero. También puedes usar Ctrl + Z y Ctrl + Shift + Z.'
   },
   {
     target: '.tool-btn[data-mode="add"]',
     title: 'Agregar estados',
     text: d => {
       const tap = d === 'touch' ? 'Toca' : 'Haz clic en';
-      return `${tap} un lugar vacío del tablero para crear un estado (q0, q1…). El primero que crees es el inicial. ${tap} un estado existente para marcarlo como final o desmarcarlo.`;
+      return `${tap} un lugar vacío del tablero para crear un estado (q0, q1…). El primero que crees es el inicial. En este modo también puedes seleccionar y arrastrar estados, y ${d === 'touch' ? 'tocar dos veces' : 'hacer doble clic en'} uno para marcarlo como final.`;
     }
   },
   {
@@ -55,7 +62,7 @@ const STEPS = [
         apd: 'el símbolo de entrada (o ε), el tope de pila y con qué se reemplaza',
         mt: 'qué lee, qué escribe y hacia dónde se mueve cada cinta (I, D o N)'
       }[type];
-      return `${tap} el estado de origen y después ${d === 'touch' ? '' : 'en '}el de destino (el mismo dos veces crea un bucle). Se abre una ventana para elegir ${what}.`;
+      return `${tap} el estado de origen y después ${d === 'touch' ? '' : 'en '}el de destino (el mismo dos veces crea un bucle). Se abre una ventana para elegir ${what}. En este modo también puedes arrastrar estados para acomodarlos${d === 'touch' ? '' : ' y elegir varios con Shift + clic o con un rectángulo'}.`;
     }
   },
   {

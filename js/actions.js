@@ -47,8 +47,8 @@ export const actions = {
   setMode(mode) {
     this.state.mode = mode;
     this.state.connectFrom = null;
-    this.state.selectedState = null;
-    document.querySelectorAll('.tool-btn').forEach(btn => {
+    if (mode === 'delete') this.clearSelection();
+    document.querySelectorAll('.tool-btn[data-mode]').forEach(btn => {
       const isActive = btn.dataset.mode === mode;
       btn.classList.toggle('active', isActive);
       setTheme(btn, this.state.automatonType, isActive);
@@ -72,11 +72,40 @@ export const actions = {
     this.state.states = this.state.states.filter(s => s.id !== id);
     this.state.transitions = this.state.transitions.filter(t => t.from !== id && t.to !== id && t.call?.reject !== id);
     this.state.transitions.forEach(t => { if (t.call?.none === id) t.call.none = null; });
-    if (this.state.selectedState === id) this.state.selectedState = null;
+    this.pruneSelection();
     if (this.state.connectFrom === id) this.state.connectFrom = null;
     this.updateHint();
     this.render();
     if (st) this.showToast(`Estado ${st.label} eliminado`);
+  },
+
+  // Borra de una vez lo seleccionado (tecla Supr): un solo paso para deshacer.
+  deleteSelection() {
+    const { states, transitions } = this.state.selection;
+    if (!states.length && !transitions.length) return;
+    this.state.states = this.state.states.filter(s => !states.includes(s.id));
+    this.state.transitions = this.state.transitions.filter(t =>
+      !transitions.includes(t.id) && !states.includes(t.from) && !states.includes(t.to) && !states.includes(t.call?.reject));
+    this.state.transitions.forEach(t => { if (states.includes(t.call?.none)) t.call.none = null; });
+    if (states.includes(this.state.connectFrom)) this.state.connectFrom = null;
+    this.clearSelection();
+    this.updateHint();
+    this.render();
+    const n = states.length + transitions.length;
+    this.showToast(n > 1 ? `Se eliminaron ${n} elementos` : 'Elemento eliminado');
+  },
+
+  renameState(id, name) {
+    const st = this.getState(id);
+    name = name.trim();
+    if (!st || name === st.label) return true;
+    if (!name) { this.showToast('El nombre no puede quedar vacío', 'error'); return false; }
+    if (/[\s,(){}]/.test(name)) { this.showToast('El nombre no puede tener espacios, comas, paréntesis ni llaves', 'error'); return false; }
+    if (this.state.states.some(s => s.label === name)) { this.showToast(`Ya hay un estado llamado ${name}`, 'error'); return false; }
+    this.showToast(`${st.label} ahora se llama ${name}`, 'success');
+    st.label = name;
+    this.render();
+    return true;
   },
 
   setStart(id) {
@@ -88,7 +117,11 @@ export const actions = {
 
   toggleFinal(id) {
     const st = this.getState(id);
-    if (st) { st.isFinal = !st.isFinal; this.render(); }
+    if (st) {
+      st.isFinal = !st.isFinal;
+      this.render();
+      this.showToast(`${st.label} ${st.isFinal ? 'ahora es final' : 'ya no es final'}`, 'success');
+    }
   },
 
   addTransition(from, to, data) {
@@ -126,6 +159,7 @@ export const actions = {
   deleteTransition(ids) {
     ids = [].concat(ids);
     this.state.transitions = this.state.transitions.filter(t => !ids.includes(t.id));
+    this.pruneSelection();
     this.render();
     this.showToast(ids.length > 1 ? `${ids.length} transiciones eliminadas` : 'Transición eliminada');
   },
@@ -187,7 +221,7 @@ export const actions = {
   clearAll() {
     this.remember();
     this.resetAutomaton();
-    this.state.selectedState = null;
+    this.clearSelection();
     this.state.connectFrom = null;
     $('testString').value = '';
     this.updateHint();

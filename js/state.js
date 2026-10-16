@@ -15,7 +15,7 @@ export function createState() {
     // MT: una transición puede llevar call: { alias, reject, none, tapes } (sub-máquina)
     transitions: [],
     modules: {},     // MT: alias → { file, automaton } (sub-máquinas de MTSolution)
-    selectedState: null,
+    selection: { states: [], transitions: [] }, // ids seleccionados (selección múltiple)
     connectFrom: null,
     mode: 'select',  // 'select' | 'add' | 'connect' | 'delete'
     nextId: 1,
@@ -23,6 +23,7 @@ export function createState() {
     currentTestState: null,
     activeTransition: null,
     pendingDrag: null,
+    marquee: null,   // rectángulo de selección con el mouse
     suppressClick: false,
     testing: false,
     stackModal: { from: null, to: null, input: null, stackTop: null },

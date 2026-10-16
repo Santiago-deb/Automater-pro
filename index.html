@@ -99,6 +99,13 @@
       <button class="tool-btn" data-mode="delete" title="Eliminar">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 011-1h6a1 1 0 011 1v2M6 6l1 14a2 2 0 002 2h8a2 2 0 002-2l1-14"/></svg>
       </button>
+      <span class="toolbar-sep" aria-hidden="true"></span>
+      <button class="tool-btn" id="btnUndo" title="Deshacer (Ctrl+Z)" aria-label="Deshacer" disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 010 11H11"/></svg>
+      </button>
+      <button class="tool-btn" id="btnRedo" title="Rehacer (Ctrl+Shift+Z)" aria-label="Rehacer" disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 000 11H13"/></svg>
+      </button>
     </div>
 
     <svg id="canvas" xmlns="http://www.w3.org/2000/svg">
