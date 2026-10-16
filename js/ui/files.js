@@ -8,7 +8,7 @@ import { parseMTFile } from '../engine/table.js';
 const $ = id => document.getElementById(id);
 const KEY = type => `automater:v1:${type}`;
 const TYPE_KEY = 'automater:v1:type';
-const FIELDS = ['alphabet', 'stackAlphabet', 'initialStackSymbol', 'tapeAlphabet', 'tapeCount', 'states', 'transitions'];
+const FIELDS = ['alphabet', 'stackAlphabet', 'initialStackSymbol', 'tapeAlphabet', 'tapeCount', 'modules', 'states', 'transitions'];
 
 // localStorage puede no existir o fallar (modo privado, cuota): nunca rompe la app
 const store = {
@@ -30,6 +30,51 @@ function download(blob, name) {
 async function readText(file) {
   const buf = await file.arrayBuffer();
   try { return new TextDecoder('utf-8', { fatal: true }).decode(buf); } catch { return new TextDecoder('latin1').decode(buf); }
+}
+
+// Un archivo elegido → autómata "plano" ({ type, states, transitions, alphabet, … }) o { error }.
+async function readAutomaton(file) {
+  const text = await readText(file);
+  if (/\.mt$/i.test(file.name)) {
+    const r = parseMTFile(text);
+    if (r.error) return { error: `${file.name}: ${r.error}` };
+    return { type: 'mt', alphabet: r.alphabet, tapeAlphabet: r.tapeAlphabet, tapeCount: r.tapeCount, modules: r.modules, ...r.automaton };
+  }
+  let data;
+  try { data = JSON.parse(text); } catch { data = null; }
+  return validAutomaton(data) ? data : { error: `${file.name} no es un autómata guardado con Automater Pro ni un .MT de MTSolution` };
+}
+
+// Completa los módulos (y los módulos de los módulos) con los archivos elegidos,
+// buscándolos por nombre. Devuelve los nombres de archivo que siguen faltando.
+function resolveModules(modules, pool, depth = 0) {
+  const missing = [];
+  for (const [alias, mod] of Object.entries(modules ?? {})) {
+    const found = pool.get(mod.file.toLowerCase());
+    if (found && depth < 8) mod.automaton = structuredClone(found);
+    if (!mod.automaton) { missing.push(mod.file); continue; }
+    missing.push(...resolveModules(mod.automaton.modules, pool, depth + 1).map(f => `${f} (de ${alias})`));
+  }
+  return missing;
+}
+
+async function readAll(files) {
+  const pool = new Map();
+  const errors = [];
+  for (const f of files) {
+    const a = await readAutomaton(f);
+    if (a.error) errors.push(a.error);
+    else pool.set(f.name.toLowerCase(), a);
+  }
+  return { pool, errors };
+}
+
+function pickFiles(multiple, onPick) {
+  const input = $('fileInput');
+  input.value = '';
+  input.multiple = multiple;
+  input.onchange = () => { if (input.files.length) onPick([...input.files]); };
+  input.click();
 }
 
 const stamp = () => new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '');
@@ -71,6 +116,7 @@ export const files = {
     if (data.initialStackSymbol) s.initialStackSymbol = data.initialStackSymbol;
     if (data.tapeAlphabet) s.tapeAlphabet = [...data.tapeAlphabet];
     if (data.tapeCount) s.tapeCount = data.tapeCount;
+    s.modules = structuredClone(data.modules ?? {});
     $('alphabetInput').value = s.alphabet.join(', ');
     $('stackAlphabetInput').value = s.stackAlphabet.join(', ');
     $('initialStackInput').value = s.initialStackSymbol;
@@ -145,31 +191,37 @@ export const files = {
     }
   },
 
+  // Se pueden elegir varios archivos a la vez: la MT y los módulos que llama.
   openFile() {
-    const input = $('fileInput');
-    input.value = '';
-    input.onchange = async () => {
-      const file = input.files[0];
-      if (!file) return;
-      const text = await readText(file);
-      if (/\.mt$/i.test(file.name)) {
-        const r = parseMTFile(text);
-        if (r.error) return this.showToast(r.error, 'error');
-        this.remember();
-        this.applyAutomaton({ type: 'mt', alphabet: r.alphabet, tapeAlphabet: r.tapeAlphabet, tapeCount: r.tapeCount, testString: '', ...r.automaton });
-        return this.toastWithUndo(`Se importó ${file.name} (MTSolution)`);
-      }
-      let data;
-      try { data = JSON.parse(text); } catch { data = null; }
-      if (!validAutomaton(data)) {
-        this.showToast('Ese archivo no es un autómata guardado con Automater Pro', 'error');
-        return;
-      }
+    pickFiles(true, async files => {
+      const { pool, errors } = await readAll(files);
+      if (!pool.size) return this.showToast(errors[0] ?? 'No se pudo abrir el archivo', 'error');
+      // La principal es la que no aparece como módulo de otra
+      const used = new Set([...pool.values()].flatMap(a => Object.values(a.modules ?? {}).map(m => m.file.toLowerCase())));
+      const [name, data] = [...pool].find(([n]) => !used.has(n)) ?? [...pool][0];
+      const missing = resolveModules(data.modules, pool);
       this.remember();
-      this.applyAutomaton(data);
-      this.toastWithUndo(`Se abrió ${file.name}`);
-    };
-    input.click();
+      this.applyAutomaton({ testString: '', ...data });
+      const shown = files.find(f => f.name.toLowerCase() === name).name;
+      if (missing.length) return this.showToast(`Se abrió ${shown}. Faltan módulos: ${missing.join(', ')}`, 'tape', { label: 'Elegir módulos', run: () => this.loadModules() });
+      this.toastWithUndo(errors.length ? `Se abrió ${shown}. ${errors.join(' · ')}` : `Se abrió ${shown}`);
+    });
+  },
+
+  // Carga los archivos de los módulos de la MT del tablero (o reemplaza uno: alias).
+  loadModules(alias = null) {
+    pickFiles(!alias, async files => {
+      const { pool, errors } = await readAll(files);
+      if (alias && pool.size) {
+        const mod = this.state.modules[alias];
+        mod.file = files[0].name;
+        mod.automaton = null;
+      }
+      const missing = resolveModules(this.state.modules, pool);
+      this.render();
+      const msg = missing.length ? `Faltan módulos: ${missing.join(', ')}` : 'Módulos cargados';
+      this.showToast(errors.length ? `${msg} · ${errors.join(' · ')}` : msg, missing.length || errors.length ? 'error' : 'tape');
+    });
   },
 
   // ---------- Exportar imagen ----------

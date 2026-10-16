@@ -2,7 +2,7 @@
 // inverso: armar el autómata a partir de una tabla escrita a mano.
 // Puro: no toca el DOM.
 import { isDeterministic, buildAutomaton, layout } from './af.js';
-import { tapeSymbols, BLANK, MOVES } from './mt.js';
+import { tapeSymbols, BLANK, MOVES, callText } from './mt.js';
 
 const set = items => `{${items.join(', ')}}`;
 const startLabel = states => states.find(s => s.isStart)?.label ?? '—';
@@ -53,7 +53,7 @@ export function formalDefinition(type, a) {
   const C = tapeSymbols(a);
   const headers = ['Estado', ...range(k).map(i => `C${i + 1}`), ...range(k).flatMap(i => [`C${i + 1} nuevo`, 'Mov.']), 'Nuevo estado'];
   const ordered = [...a.transitions].sort((x, y) => a.states.findIndex(s => s.id === x.from) - a.states.findIndex(s => s.id === y.from));
-  const rows = ordered.map(t => [label(t.from), ...t.reads, ...t.writes.flatMap((w, i) => [w, t.moves[i]]), label(t.to)]);
+  const rows = ordered.map(t => [label(t.from), ...t.reads, ...t.writes.flatMap((w, i) => [w, t.moves[i]]), t.call ? callText(t, label) : label(t.to)]);
   return {
     tuple: `MT = <${E}, ${set(a.alphabet)}, ${set(C)}, δ, ${startLabel(a.states)}, ${BLANK}, ${set(finals(a.states))}>`,
     signature: k === 1 ? 'δ: E × C → E × C × {I, D, N}' : `δ: E × C${sup(k)} → E × (C × {I, D, N})${sup(k)}`,
@@ -305,6 +305,13 @@ export function parseMTFile(text) {
   const alphabet = (sec.alfabeto?.body ?? []).map(l => l.trim()).filter(Boolean);
   if (alphabet.includes(BLANK)) return { error: `El alfabeto usa "${BLANK}", que en Automater Pro es el blanco.` };
 
+  const tapeNames = (sec.cintas?.body ?? []).map(l => l.trim());
+  const modules = {};
+  for (const line of sec.modulos?.body ?? []) {
+    const [alias, file] = line.split('\t').map(x => x.trim());
+    if (alias && file) modules[alias] = { file: file.split(/[\\/]/).pop(), automaton: null };
+  }
+
   const reg = stateRegistry();
   names.forEach(n => reg.get(n));
   const list = [];
@@ -315,8 +322,11 @@ export function parseMTFile(text) {
     if (!from) continue;
     reg.get(from);
     if (!to) continue;
+    let call = null;
     if (to.startsWith('@')) {
-      return { error: `La transición ${c[0]} llama a la sub-máquina ${to.match(/^@[^(]*/)[0]}: todavía no se pueden importar MT compuestas.` };
+      call = parseCall(to, tapeNames);
+      if (call.error) return { error: `Transición ${c[0]}: ${call.error}` };
+      if (!modules[call.alias]) return { error: `Transición ${c[0]}: el módulo "${call.alias}" no está declarado en "Modulos".` };
     }
     const sym = x => x || BLANK;
     const reads = c.slice(2, 2 + k).map(sym);
@@ -325,8 +335,9 @@ export function parseMTFile(text) {
     const moves = pairs.filter((_, i) => i % 2 === 1).map(m => m.toUpperCase() || 'N');
     const bad = moves.find(m => !MOVES.includes(m));
     if (bad) return { error: `"${bad}" no es un movimiento válido en la transición ${c[0]}: usa I, D o N.` };
-    reg.get(to);
-    list.push({ from, to, reads, writes, moves });
+    if (call) [call.accept, call.reject, call.none].forEach(n => n && reg.get(n));
+    else reg.get(to);
+    list.push({ from, to: call ? call.accept : to, reads, writes, moves, call });
   }
   if (!list.length) return { error: 'El archivo no tiene transiciones.' };
   const err = finishStates(reg, { start, fin: finals });
@@ -336,9 +347,27 @@ export function parseMTFile(text) {
   const tapeAlphabet = used.filter(c => !alphabet.includes(c));
   const base = buildAutomaton(reg.rows, [], alphabet);
   const id = name => base.states.find(s => s.label === name).id;
-  base.transitions = list.map((t, i) => ({ id: i + 1, from: id(t.from), to: id(t.to), reads: t.reads, writes: t.writes, moves: t.moves }));
+  base.transitions = list.map((t, i) => ({
+    id: i + 1, from: id(t.from), to: id(t.to), reads: t.reads, writes: t.writes, moves: t.moves,
+    ...(t.call && { call: { alias: t.call.alias, reject: id(t.call.reject), none: t.call.none ? id(t.call.none) : null, tapes: t.call.tapes } })
+  }));
   layout(base);
-  return { type: 'mt', alphabet, tapeAlphabet, tapeCount: k, automaton: base };
+  return { type: 'mt', alphabet, tapeAlphabet, tapeCount: k, modules, automaton: base };
+}
+
+// "@Copiar(e1,e2[,e3],(X,X+Y))": estados de aceptación, rechazo y sin respuesta, y cintas locales.
+function parseCall(text, tapeNames) {
+  const m = text.match(/^@([^(]+)\((.*),\s*\(([^()]*)\)\s*\)$/);
+  if (!m) return { error: `no entiendo la llamada "${text}". El formato es @alias(eAcepta, eRechaza[, eSinRespuesta], (cinta1, …)).` };
+  const targets = m[2].split(',').map(x => x.trim());
+  if (targets.length < 2 || targets.length > 3 || targets.some(x => !x)) return { error: `"${text}" tiene que nombrar 2 o 3 estados.` };
+  const tapes = [];
+  for (const name of m[3].split(',').map(x => x.trim())) {
+    const i = tapeNames.indexOf(name);
+    if (i === -1) return { error: `la cinta "${name}" de "${text}" no está en la sección "Cintas".` };
+    tapes.push(i);
+  }
+  return { alias: m[1].trim(), accept: targets[0], reject: targets[1], none: targets[2] ?? null, tapes };
 }
 
 // ---------- Varias cadenas ----------

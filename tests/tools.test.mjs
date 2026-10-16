@@ -208,8 +208,43 @@ const run = simulateMT(copiarMT, '1011');
 assert.equal(run.result, 'accepted');
 assert.equal(run.trace.at(-1).tapes[1].join('').replace(/B+$/, ''), '1011');
 assert.equal(simulateMT(copiarMT, '').result, 'accepted');
-// Las MT con sub-máquinas todavía no se importan
-assert.match(parseMTFile(mtFile('X+Y_compuesta.MT')).error, /@Copiar/);
+
+// --- Composición de MT: @alias(eAcepta, eRechaza, (cintas)) ---
+const flat = r => ({ type: r.type, alphabet: r.alphabet, tapeAlphabet: r.tapeAlphabet, tapeCount: r.tapeCount, modules: r.modules, ...r.automaton });
+const suma = parseMTFile(mtFile('X+Y_compuesta.MT'));
+assert.ok(!suma.error, suma.error);
+assert.deepEqual(Object.keys(suma.modules), ['Copiar']);
+assert.equal(suma.modules.Copiar.file, 'CopiarC1EnC2.MT');
+assert.deepEqual(suma.automaton.transitions[0].call, { alias: 'Copiar', reject: 2, none: null, tapes: [0, 2] });
+const sumaMT = flat(suma);
+assert.match(simulateMT(sumaMT, '11').msg, /Falta cargar el módulo Copiar \(CopiarC1EnC2\.MT\)/);
+sumaMT.modules.Copiar.automaton = flat(copiar);
+const xy = simulateMT(sumaMT, '111');
+assert.equal(xy.result, 'accepted');
+assert.equal(xy.trace.at(-1).tapes[2].join('').replace(/B+$/, ''), '111'); // X+Y = X (Y vacía)
+assert.deepEqual(xy.trace.at(-1).heads, [3, 0, 3]); // las cabezas vuelven movidas: pasan por referencia
+assert.match(xy.trace[1].symbol, /@Copiar ✓/);
+assert.equal(simulateMT(sumaMT, '').result, 'accepted');
+// Una MT que se llama a sí misma corta con aviso
+const loop = structuredClone(sumaMT);
+loop.modules.Copiar.automaton = loop;
+assert.equal(simulateMT({ ...loop, modules: { Copiar: { automaton: loop } } }, '1').result, 'warning');
+
+// AF como módulo: lee desde la cabeza hasta el blanco; acepta → si, rechaza → no
+const terminaEnB = { type: 'afd', ...parseAFTable(`δ a b\n→p p q\n*q p q`).automaton, alphabet: ['a', 'b'] };
+const conAF = parseMTTable(`e0 a a D si\ne0 b b N si`, ['a', 'b']).automaton;
+const si = conAF.states.find(s => s.label === 'si').id;
+const no = conAF.states.length + 1;
+conAF.states.push({ id: no, label: 'no', isStart: false, isFinal: false, x: 0, y: 0 });
+conAF.states.find(s => s.id === si).isFinal = true;
+conAF.transitions = [{ id: 1, from: 1, to: si, reads: ['a'], writes: ['a'], moves: ['N'], call: { alias: 'AF', reject: no, none: null, tapes: [0] } }];
+const mtAF = { ...conAF, alphabet: ['a', 'b'], tapeAlphabet: [], tapeCount: 1, modules: { AF: { file: 'af.json', automaton: terminaEnB } } };
+assert.equal(simulateMT(mtAF, 'aab').result, 'accepted');
+const rech = simulateMT(mtAF, 'aba');
+assert.equal(rech.result, 'rejected');
+assert.match(rech.trace.at(-1).symbol, /@AF ✗/);
+assert.equal(rech.trace.at(-1).heads[0], 3);
+assert.match(parseMTFile(mtFile('X+Y_compuesta.MT').replace('Copiar\tCopiarC1EnC2.MT', '')).error, /no está declarado/);
 assert.match(parseMTFile('{"app":"automater-pro"}').error, /MTSolution/);
 
 console.log('tools OK');
