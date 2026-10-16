@@ -442,3 +442,26 @@
   border-radius: 6px;
   margin-bottom: 8px;
 }
+
+/* MT compuesta: sub-máquinas declaradas (@alias → archivo) */
+.module-list { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+.module-title {
+  font-size: 10px;
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+}
+.module-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+}
+.module-alias { color: var(--tape); font-weight: 700; }
+.module-file { color: var(--fg-muted); overflow-wrap: anywhere; }
+.module-status { color: var(--tape); }
+.module-status.missing { color: var(--danger); }
+.module-load { margin-left: auto; padding: 3px 10px; font-size: 11px; }

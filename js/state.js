@@ -12,7 +12,9 @@ export function createState() {
     states: [],      // { id, x, y, label, isStart, isFinal }
     // AFD/APD: { id, from, to, symbol, [isEpsilon, stackTop, stackReplace, output] }
     // MT:      { id, from, to, reads: [], writes: [], moves: [] } (uno por cinta)
+    // MT: una transición puede llevar call: { alias, reject, none, tapes } (sub-máquina)
     transitions: [],
+    modules: {},     // MT: alias → { file, automaton } (sub-máquinas de MTSolution)
     selectedState: null,
     connectFrom: null,
     mode: 'select',  // 'select' | 'add' | 'connect' | 'delete'

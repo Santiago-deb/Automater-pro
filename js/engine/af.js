@@ -80,7 +80,7 @@ export function layout(automaton) {
   const { states, transitions } = automaton;
   // Separación según el rótulo más largo (los de MT son anchos: "a,B/<a,N><X,D>")
   const longest = Math.max(1, ...transitions.map(t =>
-    t.reads ? t.reads.length * 2 + t.writes.length * 6 : t.stackTop ? 9 + (t.output?.length ?? 0) : 3));
+    t.reads ? t.reads.length * 2 + t.writes.length * 6 + (t.call ? 16 : 0) : t.stackTop ? 9 + (t.output?.length ?? 0) : 3));
   const gapX = Math.max(170, longest * 7 + 110);
   const gapY = Math.max(130, 90 + longest * 3);
   const start = startOf(states) || states[0];

@@ -70,7 +70,8 @@ export const actions = {
   deleteState(id) {
     const st = this.getState(id);
     this.state.states = this.state.states.filter(s => s.id !== id);
-    this.state.transitions = this.state.transitions.filter(t => t.from !== id && t.to !== id);
+    this.state.transitions = this.state.transitions.filter(t => t.from !== id && t.to !== id && t.call?.reject !== id);
+    this.state.transitions.forEach(t => { if (t.call?.none === id) t.call.none = null; });
     if (this.state.selectedState === id) this.state.selectedState = null;
     if (this.state.connectFrom === id) this.state.connectFrom = null;
     this.updateHint();
@@ -176,7 +177,7 @@ export const actions = {
   // Vacía el autómata y la salida de la prueba (común a "Limpiar" y "Ejemplo").
   resetAutomaton() {
     Object.assign(this.state, {
-      states: [], transitions: [], nextId: 1, nextTransId: 1,
+      states: [], transitions: [], modules: {}, nextId: 1, nextTransId: 1,
       currentTestState: null, activeTransition: null
     });
     this.clearTestOutput();

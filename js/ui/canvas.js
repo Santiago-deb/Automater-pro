@@ -1,6 +1,7 @@
 // Dibujo del autómata en el SVG (estados y aristas).
 import { STATE_RADIUS as r, typeClass } from '../state.js';
 import { AUTOMATA } from '../engine/automata.js';
+import { callLabel } from '../engine/mt.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 const MARKER_SUFFIX = { afd: '', apd: '-stack', mt: '-tape' }; // ids de <marker> en index.html
@@ -19,6 +20,18 @@ function groupEdges(transitions) {
     groups.get(key).symbols.push(t.symbol);
   }
   return [...groups.values()];
+}
+
+// MT: una llamada a sub-máquina va al estado de aceptación (✓) y, si son otros,
+// a los de rechazo (✗) y sin respuesta (∞), con una arista aparte para cada uno.
+function callEdges(t) {
+  if (!t.call) return [{ ...t, ids: [t.id] }];
+  const outs = [['✓', t.to], ['✗', t.call.reject], ['∞', t.call.none]].filter(([, to]) => to != null);
+  const byTarget = new Map();
+  outs.forEach(([mark, to]) => byTarget.set(to, (byTarget.get(to) ?? '') + mark));
+  return [...byTarget].map(([to, marks], i) => (i === 0
+    ? { ...t, ids: [t.id], marks }
+    : { ...t, id: `${t.id}${marks}`, to, ids: [t.id], callOnly: `@${t.call.alias} ${marks}` }));
 }
 
 function svgEl(tag, attrs = {}, classes = []) {
@@ -59,7 +72,7 @@ function edgeGeometry(t, from, to, transitions) {
   }
 
   const pairIndex = samePair.findIndex(rt => rt.id === t.id);
-  const spread = samePair.length > 1 ? (pairIndex - (samePair.length - 1) / 2) * 30 : 0;
+  const spread = samePair.length > 1 ? (pairIndex - (samePair.length - 1) / 2) * 46 : 0; // rótulos de 20px sin pisarse
   const offset = (hasReverse ? 38 : 0) + spread;
   const cpx = (sx + ex) / 2 - uy * offset;
   const cpy = (sy + ey) / 2 + ux * offset;
@@ -77,7 +90,7 @@ export const canvas = {
     this.statesGroup.innerHTML = '';
     const edges = this.state.automatonType === 'afd'
       ? groupEdges(this.state.transitions)
-      : this.state.transitions.map(t => ({ ...t, ids: [t.id] }));
+      : this.state.transitions.flatMap(callEdges);
     edges.forEach(t => this.renderEdge(t, edges));
     this.state.states.forEach(s => this.renderState(s));
   },
@@ -104,7 +117,9 @@ export const canvas = {
       ['edge-path', isActive && 'is-active', isActive && theme]));
     g.appendChild(svgEl('path', { d }, ['edge-hit']));
 
-    const label = t.symbols ? t.symbols.join(', ') : AUTOMATA[type].label(t) + (t.output ? `, ${t.output}` : '');
+    const label = t.symbols ? t.symbols.join(', ')
+      : t.callOnly ? t.callOnly
+      : AUTOMATA[type].label(t) + (t.output ? `, ${t.output}` : '') + (t.call ? ` ${callLabel(t.call)} ${t.marks}` : '');
     const labelW = label.length * 7 + 14;
     g.appendChild(svgEl('rect',
       { x: midX - labelW / 2, y: midY - 10, width: labelW, height: 20, rx: 10 }, ['edge-label-bg']));

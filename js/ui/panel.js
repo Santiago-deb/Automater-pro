@@ -3,6 +3,7 @@
 import { AUTOMATA } from '../engine/automata.js';
 import { typeClass } from '../state.js';
 import { isDeterministic } from '../engine/af.js';
+import { callText } from '../engine/mt.js';
 
 const $ = id => document.getElementById(id);
 
@@ -39,6 +40,7 @@ export const panel = {
   render() {
     this.renderStateList();
     this.renderTransList();
+    this.renderModules();
     this.renderCanvas();
     $('canvasHint').classList.toggle('hidden', this.state.states.length > 0);
     $('stateCount').textContent = this.state.states.length;
@@ -126,7 +128,8 @@ export const panel = {
       if (!from || !to) return;
 
       const row = el('div', 'trans-row');
-      row.append(el('span', 'trans-from', from.label), el('span', 'trans-arrow', '→'), el('span', 'trans-to', to.label));
+      const toText = t.call ? callText(t, id => this.getState(id)?.label ?? '?') : to.label;
+      row.append(el('span', 'trans-from', from.label), el('span', 'trans-arrow', '→'), el('span', 'trans-to', toText));
 
       const type = this.state.automatonType;
       const detail = el('span', 'trans-detail', AUTOMATA[type].label(t));
@@ -144,6 +147,27 @@ export const panel = {
       item.appendChild(row);
       list.appendChild(item);
     });
+  },
+
+  // MT compuesta: alias → archivo, si está cargado, y para elegir el archivo.
+  renderModules() {
+    const list = $('moduleList');
+    const mods = Object.entries(this.state.modules ?? {});
+    list.hidden = !mods.length;
+    if (!mods.length) return list.replaceChildren();
+    const NAME = { afd: 'AF', apd: 'AP', mt: 'MT' };
+    list.replaceChildren(el('h4', 'module-title', 'Sub-máquinas (@alias)'), ...mods.map(([alias, m]) => {
+      const a = m.automaton;
+      const row = el('div', 'module-row');
+      row.append(
+        el('span', 'module-alias', `@${alias}`),
+        el('span', 'module-file', m.file),
+        el('span', `module-status${a ? '' : ' missing'}`, a ? `✓ ${NAME[a.type]}${a.type === 'mt' ? ` de ${a.tapeCount} cinta${a.tapeCount > 1 ? 's' : ''}` : ''}` : '✗ falta'));
+      const btn = el('button', 'btn module-load', a ? 'Cambiar' : 'Elegir archivo');
+      btn.addEventListener('click', () => this.loadModules(a ? alias : null));
+      row.appendChild(btn);
+      return row;
+    }));
   },
 
   // Traza "q0 q1 1 q0 1 ..." con el paso actual resaltado.
