@@ -11,13 +11,14 @@ import { help } from './ui/help.js';
 import { tour } from './ui/tour.js';
 import { files } from './ui/files.js';
 import { tools } from './ui/tools.js';
+import { drive } from './ui/drive.js';
 import { history } from './ui/history.js';
 import { stateMenu } from './ui/stateMenu.js';
 
 const $ = id => document.getElementById(id);
 const parseList = value => value.split(',').map(s => s.trim()).filter(s => s.length > 0);
 
-const App = Object.assign({ state: createState() }, actions, interaction, canvas, panel, modals, tapeView, help, tour, files, tools, history, stateMenu, {
+const App = Object.assign({ state: createState() }, actions, interaction, canvas, panel, modals, tapeView, help, tour, files, drive, tools, history, stateMenu, {
   init() {
     this.svg = $('canvas');
     this.viewport = $('viewport');
