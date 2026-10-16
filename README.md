@@ -58,7 +58,7 @@ Tests (sin dependencias): `node tests/engine.test.mjs && node tests/tools.test.m
 1. **Configurar Alfabetos**: En el panel lateral, define los símbolos de entrada (y de pila si es APD).
 2. **Agregar Estados**: Selecciona la herramienta "+" en la barra izquierda y haz clic en el lienzo. El primer estado será el inicial.
 3. **Opciones de un estado**: doble clic (o doble toque) sobre un estado abre su menú: renombrar, hacer inicial, marcar o quitar final, nueva transición desde ahí y eliminar.
-4. **Seleccionar varios** (PC): con la flecha o con "+", arrastra sobre un lugar vacío para encerrar estados y aristas, o usa Shift + clic para sumar o quitar. Lo seleccionado se mueve junto y `Supr` lo borra. Un clic en el fondo deselecciona todo.
+4. **Seleccionar varios** (PC): en cualquier modo menos Eliminar, arrastra sobre un lugar vacío para encerrar estados y aristas, o usa Shift + clic para sumar o quitar. Lo seleccionado se mueve junto y `Supr` lo borra. Un clic en el fondo deselecciona todo.
 5. **Deshacer y rehacer**: `Ctrl + Z` y `Ctrl + Shift + Z` (o `Ctrl + Y`), o las flechas de la barra izquierda.
 6. **Conectar**: Selecciona la herramienta de conexión (flecha), haz clic en el estado origen y luego en el destino. Se abrirá un modal para configurar la transición.
 7. **Probar**: Escribe una cadena en el campo de verificación y presiona **Verificar** para ver la animación.

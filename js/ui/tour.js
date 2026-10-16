@@ -62,7 +62,7 @@ const STEPS = [
         apd: 'el símbolo de entrada (o ε), el tope de pila y con qué se reemplaza',
         mt: 'qué lee, qué escribe y hacia dónde se mueve cada cinta (I, D o N)'
       }[type];
-      return `${tap} el estado de origen y después ${d === 'touch' ? '' : 'en '}el de destino (el mismo dos veces crea un bucle). Se abre una ventana para elegir ${what}.`;
+      return `${tap} el estado de origen y después ${d === 'touch' ? '' : 'en '}el de destino (el mismo dos veces crea un bucle). Se abre una ventana para elegir ${what}. En este modo también puedes arrastrar estados para acomodarlos${d === 'touch' ? '' : ' y elegir varios con Shift + clic o con un rectángulo'}.`;
     }
   },
   {

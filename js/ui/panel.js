@@ -16,7 +16,7 @@ const ICONS = {
 const HINTS = {
   select: 'Arrastra para mover · arrastra en vacío o Shift + clic para elegir varios · doble clic: opciones',
   add: 'Clic en el lienzo para agregar · arrastra un estado para moverlo · doble clic: opciones',
-  connect: 'Clic en estado origen, luego en destino (mismo estado = bucle) · doble clic: opciones',
+  connect: 'Clic en origen y luego en destino (mismo estado = bucle) · arrastra para mover · Shift + clic elige varios',
   delete: 'Clic en estado o transición para eliminarlo'
 };
 

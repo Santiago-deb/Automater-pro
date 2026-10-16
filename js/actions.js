@@ -47,7 +47,7 @@ export const actions = {
   setMode(mode) {
     this.state.mode = mode;
     this.state.connectFrom = null;
-    if (mode === 'delete' || mode === 'connect') this.clearSelection();
+    if (mode === 'delete') this.clearSelection();
     document.querySelectorAll('.tool-btn[data-mode]').forEach(btn => {
       const isActive = btn.dataset.mode === mode;
       btn.classList.toggle('active', isActive);

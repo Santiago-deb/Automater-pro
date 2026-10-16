@@ -132,13 +132,14 @@ export const interaction = {
   },
 
   // ---------- Puntero ----------
-  // Seleccionar y Agregar estado comparten: arrastrar estados (todos los
+  // Todos los modos menos Eliminar comparten: arrastrar estados (todos los
   // seleccionados juntos), Shift + clic y, con el mouse, el rectángulo.
+  // Un clic sin arrastrar hace lo propio del modo (agregar, conectar…).
   handlePointerDown(e) {
     const stateEl = e.target.closest('.state-node');
     const isEmpty = !stateEl && !e.target.closest('.edge-group');
     const mode = this.state.mode;
-    const editing = mode === 'select' || mode === 'add';
+    const editing = mode !== 'delete';
     this.closeStateMenu();
 
     // Clic derecho, o touch en área vacía en modo select → pan
@@ -248,7 +249,7 @@ export const interaction = {
     } else if (edgeEl) {
       const ids = edgeEl.dataset.ids.split(',').map(Number);
       if (mode === 'delete') this.deleteTransition(ids);
-      else if (mode === 'select' || mode === 'add') this.pick('transitions', ids, e.shiftKey);
+      else this.pick('transitions', ids, e.shiftKey);
     } else if (mode === 'add' && !e.shiftKey) {
       const pos = this.getWorldPos(e);
       this.clearSelection();
@@ -290,7 +291,9 @@ export const interaction = {
         this.pick('states', [id], e.shiftKey);
         break;
       case 'connect':
-        if (!this.state.connectFrom) {
+        if (e.shiftKey) {
+          this.pick('states', [id], true);
+        } else if (!this.state.connectFrom) {
           this.state.connectFrom = id;
           this.render();
         } else {
