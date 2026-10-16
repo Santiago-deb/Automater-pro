@@ -269,6 +269,78 @@ export function parseMTTable(text, inputAlphabet) {
   return { type: 'mt', alphabet, tapeAlphabet, tapeCount: k, automaton: base };
 }
 
+// ---------- Archivo .MT de MTSolution ----------
+// Texto separado por TAB, con secciones "Descripción de estados:", "Cintas:",
+// "Descripción de Transiciones:", "Alfabeto reconocido:", "Estado Final:",
+// "Estado Inicial:" y "Modulos:". Una fila de transición es:
+//   Nº  estado  leído×k  (nuevo, mov.)×k  nuevo estado  comentario
+// La celda vacía es el blanco. Filas sin nuevo estado solo declaran el estado.
+const plain = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+const SECTIONS = [
+  ['estados', /^descripcion de estados:/], ['cintas', /^cintas:/], ['transiciones', /^descripcion de transiciones:/],
+  ['alfabeto', /^alfabeto reconocido:/], ['final', /^estados? finale?s?:/], ['inicial', /^estado inicial:/], ['modulos', /^modulos:/]
+];
+
+export function parseMTFile(text) {
+  const lines = text.replace(/^﻿/, '').split(/\r?\n/);
+  if (!/^tipo:\s*maquina de turing/.test(plain(lines[0] ?? ''))) {
+    return { error: 'No es un archivo .MT de MTSolution: la primera línea tiene que ser "Tipo: Maquina de Turing".' };
+  }
+  const k = Number(lines.find(l => /^cantidad de cintas:/.test(plain(l)))?.split(':')[1]);
+  if (!Number.isInteger(k) || k < 1) return { error: 'Falta la línea "Cantidad de Cintas".' };
+  if (k > 4) return { error: `La MT usa ${k} cintas y el simulador admite hasta 4.` };
+
+  // Agrupa las líneas por sección; la línea del título también se guarda (Estado Final/Inicial traen el valor ahí)
+  const sec = {};
+  let cur = null;
+  for (const line of lines) {
+    const hit = SECTIONS.find(([, re]) => re.test(plain(line)));
+    if (hit) { cur = hit[0]; sec[cur] = { head: line, body: [] }; }
+    else if (cur && line.trim()) sec[cur].body.push(line);
+  }
+  const cellsAfterColon = s => (s?.head.split(':').slice(1).join(':') ?? '').split('\t').map(x => x.trim()).filter(Boolean);
+  const names = (sec.estados?.body ?? []).map(l => l.trim());
+  const finals = [...cellsAfterColon(sec.final), ...(sec.final?.body ?? []).map(l => l.trim())];
+  const start = cellsAfterColon(sec.inicial)[0] ?? names[0];
+  const alphabet = (sec.alfabeto?.body ?? []).map(l => l.trim()).filter(Boolean);
+  if (alphabet.includes(BLANK)) return { error: `El alfabeto usa "${BLANK}", que en Automater Pro es el blanco.` };
+
+  const reg = stateRegistry();
+  names.forEach(n => reg.get(n));
+  const list = [];
+  for (const line of (sec.transiciones?.body ?? []).slice(1)) { // la primera es el encabezado
+    const c = line.split('\t').map(x => x.trim());
+    const from = c[1];
+    const to = c[2 + 3 * k];
+    if (!from) continue;
+    reg.get(from);
+    if (!to) continue;
+    if (to.startsWith('@')) {
+      return { error: `La transición ${c[0]} llama a la sub-máquina ${to.match(/^@[^(]*/)[0]}: todavía no se pueden importar MT compuestas.` };
+    }
+    const sym = x => x || BLANK;
+    const reads = c.slice(2, 2 + k).map(sym);
+    const pairs = c.slice(2 + k, 2 + 3 * k);
+    const writes = pairs.filter((_, i) => i % 2 === 0).map(sym);
+    const moves = pairs.filter((_, i) => i % 2 === 1).map(m => m.toUpperCase() || 'N');
+    const bad = moves.find(m => !MOVES.includes(m));
+    if (bad) return { error: `"${bad}" no es un movimiento válido en la transición ${c[0]}: usa I, D o N.` };
+    reg.get(to);
+    list.push({ from, to, reads, writes, moves });
+  }
+  if (!list.length) return { error: 'El archivo no tiene transiciones.' };
+  const err = finishStates(reg, { start, fin: finals });
+  if (err) return { error: err };
+
+  const used = [...new Set(list.flatMap(t => [...t.reads, ...t.writes]))].filter(c => c !== BLANK);
+  const tapeAlphabet = used.filter(c => !alphabet.includes(c));
+  const base = buildAutomaton(reg.rows, [], alphabet);
+  const id = name => base.states.find(s => s.label === name).id;
+  base.transitions = list.map((t, i) => ({ id: i + 1, from: id(t.from), to: id(t.to), reads: t.reads, writes: t.writes, moves: t.moves }));
+  layout(base);
+  return { type: 'mt', alphabet, tapeAlphabet, tapeCount: k, automaton: base };
+}
+
 // ---------- Varias cadenas ----------
 // Líneas: una cadena por línea; "+" adelante = debería aceptarse, "-" = rechazarse.
 // λ, ε o "lambda" representan la cadena vacía.

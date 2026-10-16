@@ -39,7 +39,7 @@
   - **Expresión regular**: pertenencia de cadenas, lenguaje hasta longitud n y AF equivalente (Glushkov), con la notación `+ . * λ ∅`.
   - **Desde una tabla δ**: dibuja un AF, APD o MT a partir de su tabla (escrita como tabla o como δ(…) = (…)).
 - **Menú Archivo** (botón *Archivo* del header):
-  - Nuevo tablero, abrir y guardar el autómata como `.json`.
+  - Nuevo tablero, abrir y guardar el autómata como `.json`. *Abrir archivo* también importa los `.MT` de MTSolution.
   - *Compartir…*: en el celular abre el menú del sistema para mandar el `.json` por cualquier app (en Chrome de Android va como `.txt`; *Abrir archivo* acepta los dos). Si el navegador no puede compartir archivos, lo descarga.
   - *Iniciar sesión con Google*: guarda los autómatas en una carpeta "Automater Pro" del Drive del usuario y los lista en *Mis autómatas*. Sin backend: login con Google Identity Services y API de Drive desde el navegador, con el permiso `drive.file` (la app solo ve los archivos que creó). El Client ID está en `js/ui/drive.js`; sus orígenes autorizados se configuran en Google Cloud (proyecto "Automater-Pro").
   - Exportar el diagrama como PNG (como se ve o con fondo blanco para imprimir).
