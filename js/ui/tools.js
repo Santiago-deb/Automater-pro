@@ -3,7 +3,7 @@
 // arma la interfaz y se muestran los resultados.
 import { AUTOMATA } from '../engine/automata.js';
 import { isDeterministic, subsetConstruction, minimize, allStrings, countStrings, maxLengthFor } from '../engine/af.js';
-import { afToGrammar, grammarText, grammarTuple, derivation, grammarToAF, regexToAF, regexMatcher, LAMBDA } from '../engine/regular.js';
+import { afToGrammar, grammarText, grammarTuple, derivation, grammarToAF, regexToAF, regexMatcher, afToRegex, LAMBDA } from '../engine/regular.js';
 import { formalDefinition, tableText, parseAFTable, parseAPDTable, parseMTTable, parseBatch } from '../engine/table.js';
 import { BLANK } from '../engine/mt.js';
 
@@ -542,6 +542,30 @@ export const tools = {
   },
 
   // ---------- Expresión regular ----------
+  // AF → ER por eliminación de estados, con el detalle de cada paso
+  regexFromAF(re) {
+    const notice = this.needsAF();
+    if (notice) return [notice];
+    const r = afToRegex(this.state);
+    if (r.error) return [h('p', { class: 'form-error' }, r.error)];
+
+    const stuv = p => ['S', 'U', 'T', 'V'].filter(k => p.stuv[k] !== undefined).map(k => `${k} = ${p.stuv[k]}`).join('   ');
+    const detail = r.parts.flatMap(p => [
+      `Final ${p.final}:`,
+      ...(p.steps.length ? p.steps.map(s => `  Se elimina ${s.state}${s.changes.length ? '\n' + s.changes.map(c => `    ${c}`).join('\n') : ' (no conecta nada)'}`) : ['  No hay estados para eliminar.']),
+      `  ${stuv(p)}`,
+      `  ER = ${p.regex}`
+    ]);
+    return [
+      h('pre', { class: 'mono-block' }, r.regex),
+      h('div', { class: 'tool-actions' },
+        this.copyButton('Copiar expresión', () => r.regex),
+        h('button', { class: 'btn', onclick: () => { re.value = r.regex; re.dispatchEvent(new Event('input')); re.focus(); } }, 'Usarla abajo para probar cadenas')),
+      r.parts.length > 0 && h('details', { class: 'tool-details' }, h('summary', {}, 'Paso a paso (eliminación de estados)'), h('pre', { class: 'mono-block' }, detail.join('\n'))),
+      h('p', { class: 'hint' }, 'Por cada estado final se eliminan los demás estados, salvo el inicial: cada camino p → s → q pasa a ser p → q con R(p,s) R(s,s)* R(s,q). Con dos estados queda S*U(T+VS*U)*, y la expresión es la unión de la de cada final.')
+    ];
+  },
+
   toolRegex() {
     const re = this.keep(h('input', { id: 'regexInput', class: 'input mono', spellcheck: false, placeholder: '(a + b)*.a.b.b' }), 'regex');
     const err = h('p', { class: 'form-error', role: 'alert' });
@@ -582,6 +606,9 @@ export const tools = {
 
     return [
       ...this.intro('Expresión regular', 'Con la notación de la cátedra: + es unión, . (o nada) concatenación, * clausura, λ la cadena vacía y ∅ el vacío.'),
+      h('h5', {}, 'Del autómata a la expresión regular'),
+      ...this.regexFromAF(re),
+      h('h5', {}, 'De la expresión al autómata'),
       field('Expresión regular', re),
       chips(re, [LAMBDA, '∅', '+', '.', '*', '(', ')']),
       err,
