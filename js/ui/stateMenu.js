@@ -1,5 +1,5 @@
 // Menú de un estado: se abre con doble clic (o doble toque) en cualquier modo
-// menos Eliminar. Tiene lo que se puede hacer con un estado: renombrarlo,
+// menos Conectar (ahí el doble clic hace un bucle) y Eliminar. Tiene lo que se puede hacer con un estado: renombrarlo,
 // hacerlo inicial, marcarlo o desmarcarlo como final, sacar una transición
 // desde él y eliminarlo.
 import { STATE_RADIUS } from '../state.js';

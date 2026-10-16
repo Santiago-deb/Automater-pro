@@ -279,7 +279,7 @@ await test('modo Agregar: selecciona, mueve, crea y abre el menú', async () => 
   await key('Escape', 'Escape', 27);
 });
 
-await test('modo Conectar: arrastra, Shift + clic y conecta con dos clics', async () => {
+await test('modo Conectar: arrastra, Shift + clic, conecta con dos clics y doble clic = bucle', async () => {
   await example('mt');
   await setMode('connect');
   const q1 = await byLabel('q1');
@@ -300,8 +300,10 @@ await test('modo Conectar: arrastra, Shift + clic y conecta con dos clics', asyn
   check(await ev(`document.getElementById('tapeModal').classList.contains('show')`), 'no abrió el modal de transición');
   await ev(`document.getElementById('tapeModalCancel').click()`);
   await dblclick(q3.x, q3.y);
-  check(await menuOpen(), 'el doble clic no abrió el menú');
-  await key('Escape', 'Escape', 27);
+  check(!(await menuOpen()), 'el doble clic abrió el menú');
+  check(await ev(`document.getElementById('tapeModal').classList.contains('show')`), 'el doble clic no abrió el modal del bucle');
+  check(await ev(`document.getElementById('tapeModalFrom').textContent === document.getElementById('tapeModalTo').textContent`), 'el modal no es de un bucle');
+  await ev(`document.getElementById('tapeModalCancel').click()`);
 });
 
 await test('modo Eliminar y Supr; un Ctrl+Z recupera todo', async () => {
