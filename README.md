@@ -37,7 +37,9 @@
   - *Deshacer* en el aviso al limpiar, cargar el ejemplo o abrir un archivo.
 - **Ayuda integrada** (botón *Ayuda* del header):
   - **Tutorial**: recorrido guiado por toda la página (tablero, herramientas, alfabetos, estados, transiciones y verificación). Detecta si se usa con mouse o con pantalla táctil y explica los gestos de cada uno; los textos se adaptan al tipo de autómata abierto.
-  - **Contacto**: formulario (correo, motivo y mensaje de hasta 600 caracteres) que llega por mail vía [FormSubmit](https://formsubmit.co), sin backend.
+  - **Contacto**: formulario (correo, motivo y mensaje de hasta 600 caracteres). Lo recibe la función serverless `api/contact.js`, que limita los envíos por IP (3 por hora y 10 por día, más un tope global de 60 por día) y lo reenvía por mail con [FormSubmit](https://formsubmit.co). El destino no aparece en el código de la página.
+    - Para que el límite sea compartido entre instancias, conecta una base **Upstash Redis** al proyecto en Vercel (Storage → Upstash, plan gratis). Sin ella, el límite vive en la memoria de cada instancia.
+    - Opcional: variable `FORMSUBMIT_TARGET` con el código aleatorio que da FormSubmit al activar el formulario, para no usar el correo.
 - **100% Responsive**: Diseñado con un layout adaptable para funcionar perfectamente en computadoras de escritorio, tablets y teléfonos móviles.
 
 ## 🚀 Cómo usarlo
@@ -47,6 +49,8 @@ Está online en Vercel (se deploya solo con cada push a `main`). Para correrlo l
 ```bash
 python3 -m http.server 8000   # y abrir http://localhost:8000
 ```
+
+Con ese servidor el formulario de contacto no funciona (no corre `api/`); para probarlo hace falta `vercel dev` o un deploy de preview.
 
 Tests del motor de simulación (sin dependencias): `node tests/engine.test.mjs`
 

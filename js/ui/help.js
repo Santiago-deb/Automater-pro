@@ -1,11 +1,9 @@
 // Modal de Ayuda: pestaña Tutorial (lanza el recorrido de tour.js) y pestaña
-// Contacto (formulario que llega por mail vía FormSubmit, sin backend propio).
+// Contacto (formulario que va a /api/contact: limita envíos por IP y lo reenvía por mail).
 const $ = id => document.getElementById(id);
 
-// ponytail: FormSubmit evita tener backend/claves. El primer envío manda un
-// mail de activación a esta casilla; hasta confirmarlo no llega nada.
-const CONTACT_EMAIL = 'ssantillan@alumnos.exa.unicen.edu.ar';
-const CONTACT_URL = `https://formsubmit.co/ajax/${CONTACT_EMAIL}`;
+// Función serverless (api/contact.js): el destino del mail no está en la página.
+const CONTACT_URL = '/api/contact';
 const MAX_MESSAGE = 600;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -125,9 +123,6 @@ export const help = {
       mensaje: message.value.trim().slice(0, MAX_MESSAGE),
       automata: TYPE_NAMES[this.state.automatonType],
       dispositivo: `${detectDevice() === 'touch' ? 'Táctil' : 'Escritorio'} · ${innerWidth}×${innerHeight} · ${navigator.userAgent}`,
-      _subject: `[Automater Pro] ${motivo}`,
-      _template: 'table',
-      _captcha: 'false',
       _honey: form.elements._honey.value
     };
 
@@ -138,7 +133,11 @@ export const help = {
         body: JSON.stringify(payload)
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok || String(data.success) !== 'true') throw new Error(data.message || `HTTP ${res.status}`);
+      // Errores con explicación del servidor (límite alcanzado, datos inválidos): se muestran tal cual
+      if (!res.ok || data.success !== true) {
+        const field = { email, motivo: reason, mensaje: message }[data.field];
+        return this.contactError(data.message || 'No se pudo enviar el mensaje. Vuelve a intentarlo más tarde.', field);
+      }
 
       $('contactSentTo').textContent = payload.email;
       form.hidden = true;
