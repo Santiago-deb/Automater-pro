@@ -11,21 +11,21 @@ const labelOf = states => id => states.find(s => s.id === id)?.label ?? '?';
 // Primer conflicto de no determinismo: { msg, states } o null.
 export function afConflict({ states, transitions }) {
   const label = id => states.find(s => s.id === id)?.label ?? '?';
-  for (const t of transitions) {
-    const to = transitions.filter(u => u.from === t.from && u.symbol === t.symbol).map(u => u.to);
-    if (to.length > 1) return { msg: `δ(${label(t.from)}, ${t.symbol}) tiene más de un destino: ${to.map(label).join(', ')}`, states: [t.from] };
-  }
-  return null;
+  const t = firstRepeat(transitions);
+  if (!t) return null;
+  const to = transitions.filter(u => u.from === t.from && u.symbol === t.symbol).map(u => u.to);
+  return { msg: `δ(${label(t.from)}, ${t.symbol}) tiene más de un destino: ${to.map(label).join(', ')}`, states: [t.from] };
 }
 
-export function isDeterministic(transitions) {
+export const isDeterministic = transitions => !firstRepeat(transitions);
+
+// Primera transición cuyo (estado, símbolo) ya apareció antes, o undefined.
+function firstRepeat(transitions) {
   const seen = new Set();
-  for (const t of transitions) {
+  return transitions.find(t => {
     const k = `${t.from}\u0000${t.symbol}`;
-    if (seen.has(k)) return false;
-    seen.add(k);
-  }
-  return true;
+    return seen.has(k) || !seen.add(k);
+  });
 }
 
 // δND: estado → símbolo → [destinos]

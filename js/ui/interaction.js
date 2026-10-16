@@ -261,7 +261,8 @@ export const interaction = {
     }
   },
 
-  // Dos clics (o toques) seguidos sobre el mismo estado abren su menú.
+  // Dos clics (o toques) seguidos sobre el mismo estado abren su menú
+  // (en Conectar, en cambio, crean un bucle: ver handleStateClick).
   isDoubleClick(id) {
     const now = Date.now();
     const last = this._lastStateClick;
@@ -278,7 +279,7 @@ export const interaction = {
     if (!st) return;
     const mode = this.state.mode;
 
-    if (mode !== 'delete' && this.isDoubleClick(id)) {
+    if (mode !== 'delete' && mode !== 'connect' && this.isDoubleClick(id)) {
       this.state.connectFrom = null;
       this.pick('states', [id], false);
       this.openStateMenu(id);

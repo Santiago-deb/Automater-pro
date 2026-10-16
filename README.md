@@ -59,12 +59,12 @@ Está online en Vercel (se deploya solo con cada push a `main`). Para correrlo l
 python3 -m http.server 8000   # y abrir http://localhost:8000
 ```
 
-Tests (sin dependencias): `node tests/engine.test.mjs && node tests/tools.test.mjs`.
+Tests (sin dependencias): `node tests/engine.test.mjs && node tests/tools.test.mjs && node tests/e2e.mjs`. El último prueba la app en un Chromium real (con mouse y teclado), levantando su propio servidor; si el navegador no se llama `chromium`, pasalo con `CHROME=/ruta`.
 
 ### Guía rápida:
 1. **Configurar Alfabetos**: En el panel lateral, define los símbolos de entrada (y de pila si es APD).
 2. **Agregar Estados**: Selecciona la herramienta "+" en la barra izquierda y haz clic en el lienzo. El primer estado será el inicial.
-3. **Opciones de un estado**: doble clic (o doble toque) sobre un estado abre su menú: renombrar, hacer inicial, marcar o quitar final, nueva transición desde ahí y eliminar.
+3. **Opciones de un estado**: doble clic (o doble toque) sobre un estado abre su menú (en el modo Conectar, el doble clic crea un bucle): renombrar, hacer inicial, marcar o quitar final, nueva transición desde ahí y eliminar.
 4. **Seleccionar varios** (PC): en cualquier modo menos Eliminar, arrastra sobre un lugar vacío para encerrar estados y aristas, o usa Shift + clic para sumar o quitar. Lo seleccionado se mueve junto y `Supr` lo borra. Un clic en el fondo deselecciona todo.
 5. **Deshacer y rehacer**: `Ctrl + Z` y `Ctrl + Shift + Z` (o `Ctrl + Y`), o las flechas de la barra izquierda.
 6. **Conectar**: Selecciona la herramienta de conexión (flecha), haz clic en el estado origen y luego en el destino. Se abrirá un modal para configurar la transición.
@@ -110,7 +110,7 @@ js/
     tools.js          Modal de herramientas (una vista por herramienta)
     files.js          Menú Archivo: autoguardado, abrir/guardar/compartir .json, abrir .MT, exportar PNG
     drive.js          Login con Google y autómatas en Google Drive (Mis autómatas)
-tests/                Chequeos del motor y de las herramientas
+tests/                Chequeos del motor, de las herramientas y de punta a punta (e2e.mjs)
 ```
 
 Para agregar un nuevo tipo de autómata (p. ej. AFND o ALA): un `simulateX()` en `js/engine/`, un ejemplo en `examples.js`, su entrada en `automata.js`, el color en `base.css` (`.tipo { --type: … }`) y su modal de transición en `ui/modals.js`.

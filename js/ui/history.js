@@ -37,6 +37,7 @@ export const history = {
   redo() { this.travel('future', 'past'); },
 
   travel(from, to) {
+    if (this.state.testing) return; // la animación sigue usando los ids del tablero
     this.commitHistory(); // lo último que se hizo, aunque el temporizador no haya llegado
     const h = this.hist();
     if (!h[from].length) return;

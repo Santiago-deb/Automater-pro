@@ -1,0 +1,1 @@
+{"app":"automater-pro","version":1,"type":"afd","alphabet":["a","b"],"states":[{"id":1,"label":"e0","isStart":true,"isFinal":false,"x":200,"y":300},{"id":2,"label":"e1","isStart":false,"isFinal":true,"x":450,"y":300}],"transitions":[{"id":1,"from":1,"to":1,"symbol":"a"},{"id":2,"from":1,"to":1,"symbol":"b"},{"id":3,"from":1,"to":2,"symbol":"b"}]}

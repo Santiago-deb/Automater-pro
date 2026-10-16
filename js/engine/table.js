@@ -142,7 +142,8 @@ export function parseAFTable(text) {
   const lines = marks.rest;
   if (lines.length < 2) return { error: 'Escribe la fila de símbolos y al menos una fila de estados.' };
   let header = tokens(lines[0]);
-  if (/^(δ|d|delta)$/i.test(header[0])) header = header.slice(1);
+  const cellsFirstRow = tokens(lines[1]).length - 1;
+  if (/^(δ|delta)$/i.test(header[0]) || (/^d$/i.test(header[0]) && header.length === cellsFirstRow + 1)) header = header.slice(1);
   const alphabet = header;
   if (!alphabet.length) return { error: 'La primera fila tiene que listar los símbolos del alfabeto.' };
 
@@ -229,10 +230,11 @@ export function parseMTTable(text, inputAlphabet) {
   const reg = stateRegistry();
   const list = [];
   let k = null;
-  marks.rest.forEach(line => { const tk = tokens(line); if (tk.length) reg.get(stateName(tk[0]).name); });
-  for (const line of marks.rest) {
-    const tk = tokens(line);
-    if (!tk.length || /^(estado|e|δ)$/i.test(tk[0]) && tk.some(t => /^C\d/i.test(t))) continue; // encabezado
+  const isHeader = tk => /^(estado|e|δ)$/i.test(tk[0]) && tk.some(t => /^C\d/i.test(t));
+  const rows = marks.rest.map(tokens).filter(tk => tk.length && !isHeader(tk));
+  rows.forEach(tk => reg.get(stateName(tk[0]).name));
+  for (const tk of rows) {
+    const line = tk.join(' ');
     const from = stateName(tk[0]);
     const r = reg.get(from.name);
     r.isStart ||= from.isStart;
@@ -324,7 +326,7 @@ export function parseMTFile(text) {
     if (!to) continue;
     let call = null;
     if (to.startsWith('@')) {
-      call = parseCall(to, tapeNames);
+      call = parseCall(to, tapeNames.slice(0, k));
       if (call.error) return { error: `Transición ${c[0]}: ${call.error}` };
       if (!modules[call.alias]) return { error: `Transición ${c[0]}: el módulo "${call.alias}" no está declarado en "Modulos".` };
     }

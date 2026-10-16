@@ -260,4 +260,18 @@ assert.match(mtConflict(mtND).msg, /δ\(e0, a\) está definida más de una vez/)
 assert.equal(mtConflict(sumaMT), null);
 assert.match(mtConflict({ ...mtAF, modules: { AF: { automaton: { type: 'afd', ...ndA } } } }).msg, /sub-máquina @AF es no determinística/);
 
+// --- Regresiones de la revisión de código ---
+// La tabla de MT copiada de "Definición formal" (con encabezado) se vuelve a cargar igual
+const conHeader = parseMTTable(`Estado C1 C1 nuevo Mov. Nuevo estado\ne0 a a D e1\ne1 B B N e2\nFinales: e2`, ['a']);
+assert.deepEqual(conHeader.automaton.states.map(s => [s.label, s.isStart]), [['e0', true], ['e1', false], ['e2', false]]);
+// Un alfabeto que empieza con "d" no se confunde con la marca δ
+assert.deepEqual(parseAFTable(`d e\n→p q p\n*q q q`).alphabet, ['d', 'e']);
+assert.deepEqual(parseAFTable(`d a b\n→p q p\n*q q q`).alphabet, ['a', 'b']);
+// Una llamada no puede usar una cinta fuera de las declaradas en "Cantidad de Cintas"
+const fueraDeK = mtFile('CopiarC1EnC2.MT')
+  .replace('C2\nDescripci', 'C2\nC3\nDescripci')
+  .replace('\te1\tTerminar', '\t@M(e1,e1,(C1,C3))\tTerminar')
+  .replace('Modulos: 0', 'Modulos: 1\nM\tx.MT');
+assert.match(parseMTFile(fueraDeK).error ?? '', /cinta "C3"/);
+
 console.log('tools OK');
