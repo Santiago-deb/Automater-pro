@@ -38,7 +38,7 @@
   - **Gramática regular**: AF → gramática lineal a derecha (algoritmo de la cátedra) con derivaciones, y gramática → AF.
   - **Expresión regular**: pertenencia de cadenas, lenguaje hasta longitud n y AF equivalente (Glushkov), con la notación `+ . * λ ∅`.
   - **Desde una tabla δ**: dibuja un AF, APD o MT a partir de su tabla (escrita como tabla o como δ(…) = (…)).
-- **Archivo**: autoguardado por tipo en el navegador, guardar/abrir `.json`, exportar el diagrama como PNG (también con fondo blanco para imprimir) o SVG, y *Deshacer* después de limpiar o reemplazar el tablero.
+- **Archivo**: autoguardado por tipo en el navegador, guardar/abrir `.json`, importar `.MT` de MTSolution, exportar el diagrama como PNG (también con fondo blanco para imprimir) o SVG, y *Deshacer* después de limpiar o reemplazar el tablero.
 - **Ayuda integrada** (botón *Ayuda* del header):
   - **Tutorial**: recorrido guiado por toda la página (tablero, herramientas, alfabetos, estados, transiciones y verificación). Detecta si se usa con mouse o con pantalla táctil y explica los gestos de cada uno; los textos se adaptan al tipo de autómata abierto.
   - **Contacto**: formulario (correo, motivo y mensaje de hasta 600 caracteres) que llega por mail vía [FormSubmit](https://formsubmit.co), sin backend.

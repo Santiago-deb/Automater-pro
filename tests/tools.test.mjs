@@ -1,9 +1,10 @@
 // Herramientas de los TPs con ejercicios reales de los prácticos y filminas.
 // Correr con: node tests/tools.test.mjs
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { simulateAF, isDeterministic, subsetConstruction, minimize, allStrings, maxLengthFor } from '../js/engine/af.js';
 import { afToGrammar, grammarText, derivation, grammarToAF, regexMatcher, regexToAF, parseRegex, afToRegex } from '../js/engine/regular.js';
-import { parseAFTable, parseAPDTable, parseMTTable, formalDefinition, parseBatch, tableText } from '../js/engine/table.js';
+import { parseAFTable, parseAPDTable, parseMTTable, parseMTFile, formalDefinition, parseBatch, tableText } from '../js/engine/table.js';
 import { simulateAPD } from '../js/engine/apd.js';
 import { simulateMT } from '../js/engine/mt.js';
 
@@ -193,5 +194,22 @@ assert.deepEqual(parseBatch('+ab\n- ba\nλ\n\naab'), [
   { input: '', expect: null }, { input: 'aab', expect: null }
 ]);
 assert.equal(maxLengthFor(2, 5000), 11);
+
+// --- Archivos .MT de MTSolution (latin1, TAB) ---
+const mtFile = name => new TextDecoder('latin1').decode(readFileSync(new URL(`fixtures/${name}`, import.meta.url)));
+const copiar = parseMTFile(mtFile('CopiarC1EnC2.MT'));
+assert.ok(!copiar.error, copiar.error);
+assert.equal(copiar.tapeCount, 2);
+assert.deepEqual(copiar.alphabet, ['0', '1']);
+assert.deepEqual(copiar.automaton.states.map(s => [s.label, s.isStart, s.isFinal]), [['e0', true, false], ['e1', false, true]]);
+assert.equal(copiar.automaton.transitions.length, 3);
+const copiarMT = { ...copiar.automaton, alphabet: copiar.alphabet, tapeAlphabet: copiar.tapeAlphabet, tapeCount: 2 };
+const run = simulateMT(copiarMT, '1011');
+assert.equal(run.result, 'accepted');
+assert.equal(run.trace.at(-1).tapes[1].join('').replace(/B+$/, ''), '1011');
+assert.equal(simulateMT(copiarMT, '').result, 'accepted');
+// Las MT con sub-máquinas todavía no se importan
+assert.match(parseMTFile(mtFile('X+Y_compuesta.MT')).error, /@Copiar/);
+assert.match(parseMTFile('{"app":"automater-pro"}').error, /MTSolution/);
 
 console.log('tools OK');

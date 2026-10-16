@@ -1,7 +1,8 @@
-// Archivo: autoguardado por tipo en el navegador, guardar/abrir .json,
+// Archivo: autoguardado por tipo en el navegador, guardar/abrir .json (y abrir .MT de MTSolution),
 // exportar el diagrama como SVG o PNG (también con fondo blanco para imprimir)
 // y un nivel de "Deshacer" para las acciones que reemplazan el tablero.
 import { AUTOMATA } from '../engine/automata.js';
+import { parseMTFile } from '../engine/table.js';
 
 const $ = id => document.getElementById(id);
 const KEY = type => `automater:v1:${type}`;
@@ -22,6 +23,12 @@ function download(blob, name) {
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+// Los .MT de MTSolution vienen en latin1; los nuestros, en UTF-8
+async function readText(file) {
+  const buf = await file.arrayBuffer();
+  try { return new TextDecoder('utf-8', { fatal: true }).decode(buf); } catch { return new TextDecoder('latin1').decode(buf); }
 }
 
 const stamp = () => new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '');
@@ -124,8 +131,16 @@ export const files = {
     input.onchange = async () => {
       const file = input.files[0];
       if (!file) return;
+      const text = await readText(file);
+      if (/\.mt$/i.test(file.name)) {
+        const r = parseMTFile(text);
+        if (r.error) return this.showToast(r.error, 'error');
+        this.remember();
+        this.applyAutomaton({ type: 'mt', alphabet: r.alphabet, tapeAlphabet: r.tapeAlphabet, tapeCount: r.tapeCount, testString: '', ...r.automaton });
+        return this.toastWithUndo(`Se importó ${file.name} (MTSolution)`);
+      }
       let data;
-      try { data = JSON.parse(await file.text()); } catch { data = null; }
+      try { data = JSON.parse(text); } catch { data = null; }
       if (!validAutomaton(data)) {
         this.showToast('Ese archivo no es un autómata guardado con Automater Pro', 'error');
         return;
