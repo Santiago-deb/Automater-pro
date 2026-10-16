@@ -2,11 +2,12 @@
 // Correr con: node tests/tools.test.mjs
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { simulateAF, isDeterministic, subsetConstruction, minimize, allStrings, maxLengthFor } from '../js/engine/af.js';
+import { simulateAF, afConflict, isDeterministic, subsetConstruction, minimize, allStrings, maxLengthFor } from '../js/engine/af.js';
 import { afToGrammar, grammarText, derivation, grammarToAF, regexMatcher, regexToAF, parseRegex, afToRegex } from '../js/engine/regular.js';
 import { parseAFTable, parseAPDTable, parseMTTable, parseMTFile, formalDefinition, parseBatch, tableText } from '../js/engine/table.js';
-import { simulateAPD } from '../js/engine/apd.js';
-import { simulateMT } from '../js/engine/mt.js';
+import { simulateAPD, apdConflict } from '../js/engine/apd.js';
+import { simulateMT, mtConflict } from '../js/engine/mt.js';
+import { AUTOMATA } from '../js/engine/automata.js';
 
 const accepts = (a, w) => simulateAF(a, w).result === 'accepted';
 const lang = (a, n) => [...allStrings(a.alphabet, n)].filter(w => accepts(a, w));
@@ -246,5 +247,17 @@ assert.match(rech.trace.at(-1).symbol, /@AF ✗/);
 assert.equal(rech.trace.at(-1).heads[0], 3);
 assert.match(parseMTFile(mtFile('X+Y_compuesta.MT').replace('Copiar\tCopiarC1EnC2.MT', '')).error, /no está declarado/);
 assert.match(parseMTFile('{"app":"automater-pro"}').error, /MTSolution/);
+
+// --- No determinismo: no se prueban cadenas (los ejemplos de la app son determinísticos) ---
+for (const [type, { conflict, example }] of Object.entries(AUTOMATA)) assert.equal(conflict(example(0, 0, 800, 600)), null, type);
+assert.match(afConflict(ndA).msg, /δ\(e0, b\) tiene más de un destino: e0, e1/);
+assert.equal(afConflict(sub.automaton), null);
+const apdND = parseAPDTable(`e0 a Z e0 AZ\ne0 λ Z e1 Z`).automaton;
+assert.match(apdConflict(apdND).msg, /desde e0 con tope Z hay dos transiciones posibles/);
+assert.equal(apdConflict(parseAPDTable(`e0 a Z e0 AZ\ne0 b Z e1 Z`).automaton), null);
+const mtND = parseMTTable(`e0 a a D e0\ne0 a a N e1`, ['a']).automaton;
+assert.match(mtConflict(mtND).msg, /δ\(e0, a\) está definida más de una vez/);
+assert.equal(mtConflict(sumaMT), null);
+assert.match(mtConflict({ ...mtAF, modules: { AF: { automaton: { type: 'afd', ...ndA } } } }).msg, /sub-máquina @AF es no determinística/);
 
 console.log('tools OK');

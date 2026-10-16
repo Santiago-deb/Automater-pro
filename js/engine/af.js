@@ -8,6 +8,16 @@ const startOf = states => states.find(s => s.isStart);
 const labelOf = states => id => states.find(s => s.id === id)?.label ?? '?';
 
 // δ es función si ningún (estado, símbolo) tiene dos destinos.
+// Primer conflicto de no determinismo: { msg, states } o null.
+export function afConflict({ states, transitions }) {
+  const label = id => states.find(s => s.id === id)?.label ?? '?';
+  for (const t of transitions) {
+    const to = transitions.filter(u => u.from === t.from && u.symbol === t.symbol).map(u => u.to);
+    if (to.length > 1) return { msg: `δ(${label(t.from)}, ${t.symbol}) tiene más de un destino: ${to.map(label).join(', ')}`, states: [t.from] };
+  }
+  return null;
+}
+
 export function isDeterministic(transitions) {
   const seen = new Set();
   for (const t of transitions) {

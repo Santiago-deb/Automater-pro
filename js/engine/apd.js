@@ -80,6 +80,18 @@ export function simulateAPD({ states, transitions, alphabet, initialStackSymbol 
 
 // Detecta violaciones de determinismo: misma (estado, tope) con igual entrada,
 // o mezclando ε con cualquier entrada. ε se guarda como symbol ''.
+// Primer conflicto de no determinismo: dos transiciones desde el mismo estado y
+// con el mismo tope que leen lo mismo, o una lee ε. Devuelve { msg, states } o null.
+export function apdConflict({ states, transitions }) {
+  const label = id => states.find(s => s.id === id)?.label ?? '?';
+  for (const [i, t] of transitions.entries()) {
+    const u = transitions.slice(i + 1).find(x => x.from === t.from && x.stackTop === t.stackTop &&
+      (x.symbol === '' || t.symbol === '' || x.symbol === t.symbol));
+    if (u) return { msg: `desde ${label(t.from)} con tope ${t.stackTop} hay dos transiciones posibles: "${apdLabel(t)}" y "${apdLabel(u)}"`, states: [t.from] };
+  }
+  return null;
+}
+
 export function findConflict(transitions, from, input, stackTop) {
   return transitions.find(t =>
     t.from === from && t.stackTop === stackTop &&
