@@ -154,12 +154,20 @@ export const files = {
   // ---------- Deshacer desde el toast ----------
   // Antes de reemplazar el tablero se fija la foto actual en el historial
   // (ver history.js), y el toast ofrece volver a ella.
+  // Si lo nuevo es de otro tipo (abrir una MT estando en AF), el historial de
+  // ese tipo no conoce el tablero anterior: Deshacer vuelve a esa foto y a su tipo.
   remember() {
     this.commitHistory();
+    this._before = { type: this.state.automatonType, snap: this.hist().current };
   },
 
   toastWithUndo(msg, type = 'success') {
     this.commitHistory();
+    const before = this._before;
+    this._before = null;
+    if (before && before.type !== this.state.automatonType) {
+      return this.showToast(msg, type, { label: 'Deshacer', run: () => this.applyAutomaton({ type: before.type, ...JSON.parse(before.snap) }) });
+    }
     if (!this.canUndo()) return this.showToast(msg, type);
     this.showToast(msg, type, { label: 'Deshacer', run: () => this.undo() });
   },

@@ -132,7 +132,7 @@ export function callText(t, label) {
 export function mtConflict({ states, transitions, modules = {} }, seen = new Set()) {
   const label = id => states.find(s => s.id === id)?.label ?? '?';
   for (const [i, t] of transitions.entries()) {
-    if (transitions.slice(i + 1).some(u => u.from === t.from && u.reads.every((r, k) => r === t.reads[k]))) {
+    if (findConflictMT(transitions.slice(i + 1), t.from, t.reads)) {
       return { msg: `δ(${label(t.from)}, ${t.reads.join(', ')}) está definida más de una vez`, states: [t.from] };
     }
   }
