@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Automater Pro · AFD, APD & MT</title>
+<title>Automater Pro · AF, APD & MT</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="css/panel.css">
 <link rel="stylesheet" href="css/modals.css">
 <link rel="stylesheet" href="css/help.css">
+<link rel="stylesheet" href="css/tools.css">
 <link rel="stylesheet" href="css/files.css">
 <link rel="stylesheet" href="css/responsive.css">
 <script type="module" src="js/main.js"></script>
@@ -25,17 +26,21 @@
       <div class="logo-mark"></div>
       <div class="logo-text">
         <h1>Automater Pro</h1>
-        <p>AFD · APD · MT</p>
+        <p>AF · APD · MT</p>
       </div>
     </div>
     <div class="header-center">
       <div class="type-toggle">
-        <button class="type-btn active" data-type="afd">AFD</button>
+        <button class="type-btn active" data-type="afd" title="Autómata finito (determinístico o no)">AF</button>
         <button class="type-btn" data-type="apd"><span class="lbl-long">Pila (APD)</span><span class="lbl-short">APD</span></button>
         <button class="type-btn" data-type="mt"><span class="lbl-long">Turing (MT)</span><span class="lbl-short">MT</span></button>
       </div>
     </div>
     <div class="header-actions">
+      <button class="btn" id="btnTools" aria-haspopup="dialog" title="Herramientas para los TPs">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+        <span>Herramientas</span>
+      </button>
       <div class="menu-wrap">
         <button class="btn" id="btnFile" aria-haspopup="menu" aria-expanded="false" aria-controls="fileMenu" title="Nuevo, abrir, guardar y exportar">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
@@ -189,7 +194,7 @@
     </section>
 
     <section class="panel-section" id="transSection">
-      <h3>Transiciones (δ) <span class="counter" id="transCount">0</span></h3>
+      <h3>Transiciones (δ) <span class="tag det-badge" id="ndBadge" hidden></span><span class="counter" id="transCount">0</span></h3>
       <div class="list" id="transList">
         <p class="empty">Sin transiciones todavía</p>
       </div>
@@ -214,6 +219,7 @@
     <h3>Símbolo de transición</h3>
     <p class="modal-subtitle">De <span id="modalFrom">q0</span> a <span id="modalTo">q1</span></p>
     <div class="symbol-grid" id="symbolGrid"></div>
+    <p class="hint nd-hint" id="symbolModalHint" hidden>Los símbolos punteados ya salen de este estado hacia otro: usarlos vuelve al autómata no determinístico (AFND).</p>
     <button class="btn btn-block" id="modalCancel">Cancelar</button>
   </div>
 </div>
@@ -269,6 +275,22 @@
     <div class="modal-actions">
       <button class="btn" id="tapeModalCancel">Cancelar</button>
       <button class="btn btn-tape" id="tapeModalConfirm">Crear transición</button>
+    </div>
+  </div>
+</div>
+
+<!-- Herramientas para los TPs: la navegación y cada vista las arma js/ui/tools.js -->
+<div class="modal tools-modal" id="toolsModal">
+  <div class="modal-content tools-content" role="dialog" aria-modal="true" aria-labelledby="toolsTitle">
+    <div class="help-head">
+      <h3 id="toolsTitle">Herramientas</h3>
+      <button class="icon-btn" id="toolsClose" aria-label="Cerrar herramientas">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="tools-body">
+      <nav class="tools-nav" id="toolsNav" role="tablist" aria-label="Herramientas"></nav>
+      <div class="tools-view" id="toolsView" role="tabpanel" tabindex="-1"></div>
     </div>
   </div>
 </div>

@@ -46,7 +46,7 @@ export function exampleAPD(cx, cy, width, height) {
   };
 }
 
-// Ejemplo de la filmina de clase: L = { aⁿ bⁿ c²ⁿ / n > 0 } con 2 cintas.
+// Ejemplo visto en clase: L = { aⁿ bⁿ c²ⁿ / n > 0 } con 2 cintas.
 // Copia las a en C2 como A, retrocede una A por cada b, y avanza una A cada dos c.
 export function exampleMT(cx, cy) {
   const dx = 190;

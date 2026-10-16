@@ -5,7 +5,8 @@
 
 ## ✨ Características Principales
 
-- **Tres modos**: AFD (Autómatas Finitos), APD (Autómatas de Pila) y MT (Máquinas de Turing).
+- **Tres modos**: AF (Autómatas Finitos, determinísticos o no), APD (Autómatas de Pila) y MT (Máquinas de Turing).
+- **AFND**: en el modo AF un estado puede tener varios destinos con el mismo símbolo; la simulación sigue todos los caminos a la vez y el panel indica si es AFD o AFND.
 - **Lienzo Interactivo (SVG)**: 
   - Agrega, mueve y conecta estados fácilmente.
   - Soporte para bucles y aristas bidireccionales sin superposiciones.
@@ -28,6 +29,15 @@
   - Rótulos con la notación de la cursada: `a,B/<a,D><X,D>`.
   - Animación de las cintas: la tira se desliza bajo la cabeza de lectura/escritura, la celda escrita destella y se muestra la configuración α₁ eᵢ α₂.
   - Detecta no determinismo, movimientos a izquierda de la celda de inicio y MT que no se detienen (corte a los 1000 pasos).
+- **Herramientas para los TPs** (botón *Herramientas*):
+  - **Varias cadenas**: prueba una lista de cadenas y muestra si se aceptan, dónde se detiene, la traducción (APD) o las cintas finales (MT). Con `+`/`-` adelante se compara contra lo esperado.
+  - **Explorar el lenguaje**: lista todas las cadenas aceptadas hasta cierta longitud, para los ejercicios de "determine el lenguaje".
+  - **Definición formal**: tupla y tabla δ con la notación de la cátedra (en MT, una fila por transición con lo leído, el nuevo símbolo y el movimiento de cada cinta), para copiar como texto o como tabla para Word / Docs. En AF revisa δ incompleta (con opción de agregar estado trampa) y estados inalcanzables.
+  - **AFND → AFD**: construcción de subconjuntos con las tablas δND y δD y el cálculo de cada celda.
+  - **Minimizar AFD**: inalcanzables, muertos y particiones Π0, Π1… con la tabla de grupos de cada paso, como en clase.
+  - **Gramática regular**: AF → gramática lineal a derecha (algoritmo de la cátedra) con derivaciones, y gramática → AF.
+  - **Expresión regular**: pertenencia de cadenas, lenguaje hasta longitud n y AF equivalente (Glushkov), con la notación `+ . * λ ∅`.
+  - **Desde una tabla δ**: dibuja un AF, APD o MT a partir de su tabla (escrita como tabla o como δ(…) = (…)).
 - **Menú Archivo** (botón *Archivo* del header):
   - Nuevo tablero, abrir y guardar el autómata como `.json`.
   - *Compartir…*: en el celular abre el menú del sistema para mandar el `.json` por cualquier app (en Chrome de Android va como `.txt`; *Abrir archivo* acepta los dos). Si el navegador no puede compartir archivos, lo descarga.
@@ -48,7 +58,7 @@ Está online en Vercel (se deploya solo con cada push a `main`). Para correrlo l
 python3 -m http.server 8000   # y abrir http://localhost:8000
 ```
 
-Tests del motor de simulación (sin dependencias): `node tests/engine.test.mjs`
+Tests (sin dependencias): `node tests/engine.test.mjs && node tests/tools.test.mjs`.
 
 ### Guía rápida:
 1. **Configurar Alfabetos**: En el panel lateral, define los símbolos de entrada (y de pila si es APD).
@@ -68,6 +78,7 @@ css/
   panel.css           Panel lateral: listas, prueba, traza y pila
   modals.css          Modales y toast
   help.css            Modal de ayuda, contacto y recorrido guiado
+  tools.css           Herramientas e indicador AFD/AFND
   files.css           Menú Archivo y toast con Deshacer
   responsive.css      Breakpoints mobile
 js/
@@ -76,6 +87,9 @@ js/
   actions.js          Editar el autómata, verificar cadenas, cargar ejemplos
   engine/             Lógica pura, sin DOM (testeable con node)
     afd.js            simulateAFD()
+    af.js             AFND, subconjuntos, minimización, layout automático
+    regular.js        AF ↔ gramática regular, derivaciones, expresiones regulares
+    table.js          Definición formal, tabla δ y carga desde tabla (AF/APD/MT)
     apd.js            simulateAPD(), findConflict(), apdLabel()
     mt.js             simulateMT(), findConflictMT(), mtLabel(), configuration()
     examples.js       Autómatas de ejemplo
@@ -88,9 +102,10 @@ js/
     tape.js           Cintas animadas de la MT
     help.js           Modal de Ayuda y formulario de contacto
     tour.js           Recorrido guiado (pasos y posicionamiento)
+    tools.js          Modal de herramientas (una vista por herramienta)
     files.js          Menú Archivo: autoguardado, abrir/guardar/compartir .json, exportar PNG, deshacer
     drive.js          Login con Google y autómatas en Google Drive (Mis autómatas)
-tests/engine.test.mjs Chequeos del motor
+tests/                Chequeos del motor y de las herramientas
 ```
 
 Para agregar un nuevo tipo de autómata (p. ej. AFND o ALA): un `simulateX()` en `js/engine/`, un ejemplo en `examples.js`, su entrada en `automata.js`, el color en `base.css` (`.tipo { --type: … }`) y su modal de transición en `ui/modals.js`.

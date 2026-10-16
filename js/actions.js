@@ -122,10 +122,11 @@ export const actions = {
     }
   },
 
-  deleteTransition(id) {
-    this.state.transitions = this.state.transitions.filter(t => t.id !== id);
+  deleteTransition(ids) {
+    ids = [].concat(ids);
+    this.state.transitions = this.state.transitions.filter(t => !ids.includes(t.id));
     this.render();
-    this.showToast('Transición eliminada');
+    this.showToast(ids.length > 1 ? `${ids.length} transiciones eliminadas` : 'Transición eliminada');
   },
 
   verifyString() {

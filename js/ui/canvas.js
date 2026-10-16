@@ -5,6 +5,22 @@ import { AUTOMATA } from '../engine/automata.js';
 const NS = 'http://www.w3.org/2000/svg';
 const MARKER_SUFFIX = { afd: '', apd: '-stack', mt: '-tape' }; // ids de <marker> en index.html
 
+// currentTestState / activeTransition pueden ser un id o una lista (AFND)
+const has = (value, id) => (Array.isArray(value) ? value.includes(id) : value === id);
+
+// En el AF, las transiciones entre el mismo par de estados van en una sola
+// arista rotulada "a, b" (así se dibuja en la cursada).
+function groupEdges(transitions) {
+  const groups = new Map();
+  for (const t of transitions) {
+    const key = `${t.from}>${t.to}`;
+    if (!groups.has(key)) groups.set(key, { ...t, ids: [], symbols: [] });
+    groups.get(key).ids.push(t.id);
+    groups.get(key).symbols.push(t.symbol);
+  }
+  return [...groups.values()];
+}
+
 function svgEl(tag, attrs = {}, classes = []) {
   const el = document.createElementNS(NS, tag);
   for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
@@ -59,29 +75,36 @@ export const canvas = {
   renderCanvas() {
     this.edgesGroup.innerHTML = '';
     this.statesGroup.innerHTML = '';
-    this.state.transitions.forEach(t => this.renderEdge(t));
+    const edges = this.state.automatonType === 'afd'
+      ? groupEdges(this.state.transitions)
+      : this.state.transitions.map(t => ({ ...t, ids: [t.id] }));
+    edges.forEach(t => this.renderEdge(t, edges));
     this.state.states.forEach(s => this.renderState(s));
   },
 
-  renderEdge(t) {
+  renderEdge(t, edges) {
     const from = this.getState(t.from);
     const to = this.getState(t.to);
     if (!from || !to) return;
 
-    const isActive = this.state.activeTransition === t.id;
+    const isActive = t.ids.some(id => has(this.state.activeTransition, id));
     const type = this.state.automatonType;
     const theme = typeClass(type);
-    const { d, midX, midY } = edgeGeometry(t, from, to, this.state.transitions);
+    const geo = edgeGeometry(t, from, to, edges);
+    const { d, midX } = geo;
+    // Varios bucles en un mismo estado: los rótulos se apilan hacia arriba
+    const loopIndex = t.from === t.to ? edges.filter(e => e.from === t.from && e.to === t.to).findIndex(e => e.id === t.id) : 0;
+    const midY = geo.midY - loopIndex * 22;
 
     const g = svgEl('g', {}, ['edge-group']);
-    g.dataset.id = t.id;
+    g.dataset.ids = t.ids.join(',');
 
     const marker = isActive ? `url(#arrow-active${MARKER_SUFFIX[type]})` : 'url(#arrow-default)';
     g.appendChild(svgEl('path', { d, 'marker-end': marker },
       ['edge-path', isActive && 'is-active', isActive && theme]));
     g.appendChild(svgEl('path', { d }, ['edge-hit']));
 
-    const label = AUTOMATA[type].label(t) + (t.output ? `, ${t.output}` : '');
+    const label = t.symbols ? t.symbols.join(', ') : AUTOMATA[type].label(t) + (t.output ? `, ${t.output}` : '');
     const labelW = label.length * 7 + 14;
     g.appendChild(svgEl('rect',
       { x: midX - labelW / 2, y: midY - 10, width: labelW, height: 20, rx: 10 }, ['edge-label-bg']));
@@ -101,7 +124,7 @@ export const canvas = {
       s.isFinal && 'is-final',
       this.state.selectedState === s.id && 'is-selected',
       this.state.connectFrom === s.id && 'connecting-source',
-      this.state.currentTestState === s.id && 'current'
+      has(this.state.currentTestState, s.id) && 'current'
     ]);
     g.dataset.id = s.id;
 
@@ -117,6 +140,8 @@ export const canvas = {
 
     const text = svgEl('text', {}, ['state-label']);
     text.textContent = s.label;
+    // Rótulos largos (p. ej. "[e0,e1]" del pasaje a AFD) se achican para entrar en el círculo
+    if (s.label.length > 4) text.style.fontSize = `${Math.max(7, Math.min(14, (2 * r - 8) / (0.6 * s.label.length)))}px`;
     g.appendChild(text);
 
     this.statesGroup.appendChild(g);

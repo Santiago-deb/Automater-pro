@@ -2,6 +2,7 @@
 // traza, pila visual, toasts y hint del lienzo.
 import { AUTOMATA } from '../engine/automata.js';
 import { typeClass } from '../state.js';
+import { isDeterministic } from '../engine/af.js';
 
 const $ = id => document.getElementById(id);
 
@@ -42,6 +43,14 @@ export const panel = {
     $('canvasHint').classList.toggle('hidden', this.state.states.length > 0);
     $('stateCount').textContent = this.state.states.length;
     $('transCount').textContent = this.state.transitions.length;
+    // En modo AF se avisa si el autómata quedó no determinístico
+    const badge = $('ndBadge');
+    const isAF = this.state.automatonType === 'afd' && this.state.transitions.length > 0;
+    const det = isDeterministic(this.state.transitions);
+    badge.hidden = !isAF;
+    badge.textContent = det ? 'AFD' : 'AFND';
+    badge.classList.toggle('nd', !det);
+    badge.title = det ? 'Determinístico: δ es función' : 'No determinístico: algún estado tiene dos destinos con el mismo símbolo';
     this.scheduleSave();
   },
 
@@ -145,8 +154,11 @@ export const panel = {
     const wrap = $('testTrace');
     wrap.innerHTML = '';
     trace.forEach((t, i) => {
-      const st = this.getState(t.state);
-      const stEl = el('span', 'trace-state' + cls + (i === currentIdx ? ' current' : ''), st ? st.label : '?');
+      // AFND: el paso es un conjunto de estados
+      const text = Array.isArray(t.state)
+        ? `{${t.state.map(id => this.getState(id)?.label ?? '?').join(', ')}}`
+        : this.getState(t.state)?.label ?? '?';
+      const stEl = el('span', 'trace-state' + cls + (i === currentIdx ? ' current' : ''), text);
       wrap.appendChild(stEl);
 
       if (t.symbol) {

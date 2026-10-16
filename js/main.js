@@ -10,12 +10,13 @@ import { tapeView } from './ui/tape.js';
 import { help } from './ui/help.js';
 import { tour } from './ui/tour.js';
 import { files } from './ui/files.js';
+import { tools } from './ui/tools.js';
 import { drive } from './ui/drive.js';
 
 const $ = id => document.getElementById(id);
 const parseList = value => value.split(',').map(s => s.trim()).filter(s => s.length > 0);
 
-const App = Object.assign({ state: createState() }, actions, interaction, canvas, panel, modals, tapeView, help, tour, files, drive, {
+const App = Object.assign({ state: createState() }, actions, interaction, canvas, panel, modals, tapeView, help, tour, files, drive, tools, {
   init() {
     this.svg = $('canvas');
     this.viewport = $('viewport');
@@ -25,6 +26,7 @@ const App = Object.assign({ state: createState() }, actions, interaction, canvas
     this.bindEvents();
     this.bindHelp();
     this.bindFileMenu();
+    this.bindTools();
     this.restoreSession();
     this.updateHint();
     this.render();
@@ -70,10 +72,10 @@ const App = Object.assign({ state: createState() }, actions, interaction, canvas
     on('stackModal', 'click', e => { if (e.target.id === 'stackModal') this.closeStackModal(); });
     on('stackModalConfirm', 'click', () => this.confirmStackTransition());
     on('tapeModalCancel', 'click', () => this.closeTapeModal());
-    on('tapeModal', 'click', e => { if (e.target.id === 'tapeModal') this.closeTapeModal(); this.closeHelp(); });
+    on('tapeModal', 'click', e => { if (e.target.id === 'tapeModal') this.closeTapeModal(); this.closeHelp(); this.closeTools(); });
     on('tapeModalConfirm', 'click', () => this.confirmTapeTransition());
     document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') { this.closeSymbolModal(); this.closeStackModal(); this.closeTapeModal(); this.closeHelp(); }
+      if (e.key === 'Escape') { this.closeSymbolModal(); this.closeStackModal(); this.closeTapeModal(); this.closeHelp(); this.closeTools(); }
     });
   }
 });

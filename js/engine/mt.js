@@ -1,4 +1,4 @@
-// Máquina de Turing determinística de k cintas (teoría: Apunte 6, UNCPBA).
+// Máquina de Turing determinística de k cintas (teoría de la cátedra, UNCPBA).
 // MT = <E, A, C, δ, e0, B, F>,  δ: E × Cᵏ → E × (C × {I, D, N})ᵏ
 // - Cada cinta tiene celda de inicio y es infinita a derecha; B es el blanco.
 // - La entrada va en la cinta 1; las demás arrancan en blanco. Cabezas en la celda 0.
