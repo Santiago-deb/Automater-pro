@@ -131,11 +131,15 @@ export const files = {
   // ---------- Autoguardado ----------
   scheduleSave() {
     clearTimeout(this._saveTimer);
-    this._saveTimer = setTimeout(() => {
-      store.set(KEY(this.state.automatonType), this.serialize());
-      store.set(TYPE_KEY, this.state.automatonType);
-      this.commitHistory();
-    }, 300);
+    this._saveTimer = setTimeout(() => this.saveNow(), 300);
+  },
+
+  // Sin esperar el temporizador (p. ej. antes de salir de la página para iniciar sesión).
+  saveNow() {
+    clearTimeout(this._saveTimer);
+    store.set(KEY(this.state.automatonType), this.serialize());
+    store.set(TYPE_KEY, this.state.automatonType);
+    this.commitHistory();
   },
 
   // Al abrir la app o cambiar de tipo: lo último que había, o el ejemplo.

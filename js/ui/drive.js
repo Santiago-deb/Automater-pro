@@ -9,8 +9,10 @@ const CLIENT_ID = '966670316238-q883sd6gakuifo35jsom5otoqf0h5e3m.apps.googleuser
 const SCOPE = 'https://www.googleapis.com/auth/drive.file';
 const API = 'https://www.googleapis.com/drive/v3';
 const UPLOAD = 'https://www.googleapis.com/upload/drive/v3/files';
+const AUTH = 'https://accounts.google.com/o/oauth2/v2/auth';
 const TAG = "appProperties has { key='automater' and value='1' }";
 const SESSION = 'automater:drive';
+const STATE = 'automater:oauth-state';
 
 const $ = id => document.getElementById(id);
 const q = s => encodeURIComponent(s);
@@ -35,29 +37,79 @@ function loadGIS() {
   return gisLoading;
 }
 
+// Si el navegador no deja abrir la ventana, se inicia sesión saliendo a Google
+// y volviendo (ver redirectLogin / driveResume).
+class PopupBlocked extends Error {}
+
 async function requestToken(hint) {
   if (!CLIENT_ID) throw new Error('Falta configurar el Client ID de Google en js/ui/drive.js');
-  await loadGIS();
+  // La ventana tiene que abrirse cerca del clic: con el script ya precargado
+  // (renderDrive) no se espera nada antes de abrirla.
+  if (!window.google?.accounts?.oauth2) await loadGIS();
   return new Promise((ok, fail) => {
     google.accounts.oauth2.initTokenClient({
       client_id: CLIENT_ID,
       scope: SCOPE,
       hint,
       callback: r => (r.error ? fail(new Error(r.error_description || r.error)) : ok(r)),
-      error_callback: e => fail(new Error(e.type === 'popup_closed' ? 'Se cerró la ventana de Google' : 'Google bloqueó la ventana de inicio de sesión'))
+      error_callback: e => fail(e.type === 'popup_closed' ? new Error('Se cerró la ventana de Google')
+        : e.type === 'popup_failed_to_open' ? new PopupBlocked()
+        : new Error(`Google no pudo iniciar sesión (${e.type ?? 'error desconocido'})`))
     }).requestAccessToken({ prompt: hint ? '' : 'select_account' });
   });
+}
+
+// Inicio de sesión sin ventana emergente: la página va a Google y vuelve con el
+// token en el fragmento (#access_token=…). El tablero se guarda antes de salir.
+function redirectLogin(hint) {
+  const state = crypto.randomUUID();
+  try { sessionStorage.setItem(STATE, state); } catch { /* sin sessionStorage no se puede validar la vuelta */ }
+  const params = new URLSearchParams({
+    client_id: CLIENT_ID, redirect_uri: location.origin + location.pathname, response_type: 'token',
+    scope: SCOPE, state, include_granted_scopes: 'true', ...(hint ? { login_hint: hint } : { prompt: 'select_account' })
+  });
+  location.assign(`${AUTH}?${params}`);
 }
 
 export const drive = {
   async driveLogin(hint) {
     const prev = session.get();
-    const r = await requestToken(hint);
-    const s = { token: r.access_token, exp: Date.now() + (r.expires_in - 60) * 1000 };
+    let r;
+    try {
+      r = await requestToken(hint);
+    } catch (e) {
+      if (!(e instanceof PopupBlocked)) throw e;
+      this.saveNow();
+      redirectLogin(hint);
+      return new Promise(() => {}); // la página se va a Google
+    }
+    return this.driveStart(r.access_token, r.expires_in, prev?.folder);
+  },
+
+  async driveStart(token, expiresIn, folder) {
+    const s = { token, exp: Date.now() + (expiresIn - 60) * 1000 };
     session.set(s); // driveFetch lo necesita para pedir el usuario
     const { user } = await this.driveFetch(`${API}/about?fields=user(displayName,emailAddress)`);
-    session.set({ ...s, user, folder: prev?.folder });
+    session.set({ ...s, user, folder });
     return session.get();
+  },
+
+  // Al cargar la página: si se vuelve de iniciar sesión en Google, toma el token
+  // del fragmento de la URL (y lo borra de la barra de direcciones).
+  async driveResume() {
+    const p = new URLSearchParams(location.hash.slice(1));
+    if (!p.has('access_token') && !p.has('error')) return;
+    let expected = null;
+    try { expected = sessionStorage.getItem(STATE); sessionStorage.removeItem(STATE); } catch { /* sin estado guardado */ }
+    history.replaceState(null, '', location.pathname + location.search);
+    if (!expected || p.get('state') !== expected) return;
+    if (p.has('error')) return this.showToast(p.get('error') === 'access_denied' ? 'Cancelaste el inicio de sesión con Google' : `Google no pudo iniciar sesión (${p.get('error')})`, 'error');
+    try {
+      const s = await this.driveStart(p.get('access_token'), Number(p.get('expires_in')) || 3600, session.get()?.folder);
+      this.showToast(`Sesión iniciada como ${s.user.emailAddress}`, 'success');
+    } catch (e) {
+      this.showToast(e.message, 'error');
+    }
   },
 
   driveLogout() {
