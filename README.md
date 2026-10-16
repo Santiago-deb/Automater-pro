@@ -6,7 +6,8 @@
 ## ✨ Características Principales
 
 - **Tres modos**: AF (Autómatas Finitos, determinísticos o no), APD (Autómatas de Pila) y MT (Máquinas de Turing).
-- **AFND**: en el modo AF un estado puede tener varios destinos con el mismo símbolo; la simulación sigue todos los caminos a la vez y el panel indica si es AFD o AFND.
+- **AFND**: en el modo AF un estado puede tener varios destinos con el mismo símbolo, y el panel indica si es AFD o AFND.
+- **Solo se prueban cadenas en autómatas determinísticos** (AF, APD y MT, incluidas las sub-máquinas de una MT): si hay no determinismo, Verificar, Varias cadenas y Explorar el lenguaje avisan qué transición lo causa. Un AFND se puede pasar a AFD con la herramienta.
 - **Lienzo Interactivo (SVG)**: 
   - Agrega, mueve y conecta estados fácilmente.
   - Soporte para bucles y aristas bidireccionales sin superposiciones.

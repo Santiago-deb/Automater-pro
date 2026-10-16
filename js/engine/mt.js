@@ -8,8 +8,8 @@
 //   referencia, y según el resultado la MT sigue en el estado de aceptación (to),
 //   de rechazo (call.reject) o sin respuesta (call.none).
 // Pura: no toca el DOM.
-import { simulateAF } from './af.js';
-import { simulateAPD } from './apd.js';
+import { simulateAF, afConflict } from './af.js';
+import { simulateAPD, apdConflict } from './apd.js';
 
 export const BLANK = 'B';
 export const MOVES = ['I', 'D', 'N'];
@@ -126,6 +126,23 @@ export function callText(t, label) {
   const { alias, reject, none, tapes } = t.call;
   const targets = [t.to, reject, ...(none != null ? [none] : [])].map(label);
   return `@${alias}(${targets.join(', ')}, (${tapes.map(i => `C${i + 1}`).join(', ')}))`;
+}
+
+// Primer conflicto de no determinismo, también dentro de las sub-máquinas: { msg, states } o null.
+export function mtConflict({ states, transitions, modules = {} }, seen = new Set()) {
+  const label = id => states.find(s => s.id === id)?.label ?? '?';
+  for (const [i, t] of transitions.entries()) {
+    if (transitions.slice(i + 1).some(u => u.from === t.from && u.reads.every((r, k) => r === t.reads[k]))) {
+      return { msg: `δ(${label(t.from)}, ${t.reads.join(', ')}) está definida más de una vez`, states: [t.from] };
+    }
+  }
+  for (const [alias, { automaton: a }] of Object.entries(modules)) {
+    if (!a || seen.has(a)) continue;
+    seen.add(a);
+    const c = a.type === 'mt' ? mtConflict(a, seen) : (a.type === 'apd' ? apdConflict : afConflict)(a);
+    if (c) return { msg: `la sub-máquina @${alias} es no determinística: ${c.msg}`, states: [] };
+  }
+  return null;
 }
 
 // δ es función: no puede haber dos transiciones desde el mismo estado leyendo lo mismo.

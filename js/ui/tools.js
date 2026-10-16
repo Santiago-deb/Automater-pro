@@ -222,6 +222,8 @@ export const tools = {
     const results = h('div', { class: 'tool-results', 'aria-live': 'polite' });
 
     const run = () => {
+      const nd = this.nondeterminismWarning();
+      if (nd) { results.replaceChildren(h('p', { class: 'form-error' }, nd.msg)); return; }
       const items = parseBatch(input.value);
       if (!items.length) { results.replaceChildren(h('p', { class: 'form-error' }, 'Escribe al menos una cadena.')); return; }
       const sim = AUTOMATA[type].simulate;
@@ -296,6 +298,8 @@ export const tools = {
     const results = h('div', { class: 'tool-results', 'aria-live': 'polite' });
 
     const run = () => {
+      const nd = this.nondeterminismWarning();
+      if (nd) { results.replaceChildren(h('p', { class: 'form-error' }, nd.msg)); return; }
       const n = Math.max(0, Math.min(maxN, +len.value || 0));
       len.value = n;
       results.replaceChildren(h('p', { class: 'hint' }, 'Calculando…'));

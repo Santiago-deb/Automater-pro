@@ -164,8 +164,24 @@ export const actions = {
     this.showToast(ids.length > 1 ? `${ids.length} transiciones eliminadas` : 'Transición eliminada');
   },
 
+  // Solo se prueban cadenas en autómatas determinísticos. Devuelve el aviso, o null.
+  nondeterminismWarning() {
+    const type = this.state.automatonType;
+    const c = AUTOMATA[type].conflict(this.state);
+    if (!c) return null;
+    const fix = type === 'afd' ? ' Pásalo a AFD con Herramientas → AFND → AFD para probarlo.' : '';
+    return { msg: `⚠ No se pueden probar cadenas: el autómata es no determinístico (${c.msg}).${fix}`, states: c.states };
+  },
+
   verifyString() {
     if (this.state.testing) return;
+    const nd = this.nondeterminismWarning();
+    if (nd) {
+      this.showTestResult('warning', nd.msg);
+      this.state.currentTestState = nd.states;
+      this.renderCanvas();
+      return;
+    }
     const type = this.state.automatonType;
     const { result, msg, trace, highlight } = AUTOMATA[type].simulate(this.state, $('testString').value);
 
