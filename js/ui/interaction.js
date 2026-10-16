@@ -55,6 +55,68 @@ export const interaction = {
     this.applyTransform();
   },
 
+  // ---------- Tacto: un dedo desplaza, dos dedos hacen zoom (como una foto) ----------
+  // Límites de una foto: si el autómata es más grande que la pantalla, sus bordes
+  // no pueden entrar en ella; si es más chico, queda entero a la vista.
+  clampCamera() {
+    const states = this.state.states;
+    if (!states.length) return;
+    const pad = STATE_RADIUS + 50; // aire para rótulos y bucles
+    const cam = this.state.camera;
+    const { width, height } = this.svg.getBoundingClientRect();
+    const axis = (pos, coords, size) => {
+      const a = -(Math.min(...coords) - pad) * cam.scale;    // borde izquierdo/superior pegado a la pantalla
+      const b = size - (Math.max(...coords) + pad) * cam.scale; // borde derecho/inferior pegado a la pantalla
+      return Math.max(Math.min(a, b), Math.min(Math.max(a, b), pos));
+    };
+    cam.x = axis(cam.x, states.map(s => s.x), width);
+    cam.y = axis(cam.y, states.map(s => s.y), height);
+  },
+
+  touchDown(e) {
+    this._touches ??= new Map();
+    // Primer dedo de un gesto nuevo: se olvidan dedos cuyo "soltar" no llegó
+    if (e.isPrimary) { this._touches.clear(); this._pinch = null; this._gestureLock = false; }
+    this._touches.set(e.pointerId, this.getScreenPos(e));
+    if (this._touches.size !== 2) return false;
+    // Segundo dedo: empieza el pellizco y se cancela lo que hacía el primero
+    const pd = this.state.pendingDrag;
+    if (pd?.active) {
+      pd.group.forEach(({ id, x, y }) => Object.assign(this.getState(id) ?? {}, { x, y }));
+      this.renderCanvas();
+    }
+    this.state.pendingDrag = null;
+    this.state.panning = false;
+    const [a, b] = [...this._touches.values()];
+    this._pinch = { dist: Math.hypot(a.x - b.x, a.y - b.y) || 1, mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, cam: { ...this.state.camera } };
+    this._gestureLock = true; // el toque que sigue a un pellizco no agrega ni selecciona
+    return true;
+  },
+
+  touchMove(e) {
+    if (!this._touches?.has(e.pointerId)) return false;
+    this._touches.set(e.pointerId, this.getScreenPos(e));
+    const p = this._pinch;
+    if (!p || this._touches.size < 2) return false;
+    const [a, b] = [...this._touches.values()];
+    const scale = Math.max(0.2, Math.min(4, p.cam.scale * Math.hypot(a.x - b.x, a.y - b.y) / p.dist));
+    const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    // El punto del tablero que estaba entre los dedos queda entre los dedos
+    const wx = (p.mid.x - p.cam.x) / p.cam.scale;
+    const wy = (p.mid.y - p.cam.y) / p.cam.scale;
+    Object.assign(this.state.camera, { scale, x: mid.x - wx * scale, y: mid.y - wy * scale });
+    this.clampCamera();
+    this.applyTransform();
+    return true;
+  },
+
+  touchUp(e) {
+    if (!this._touches?.delete(e.pointerId)) return false;
+    if (this._touches.size < 2) this._pinch = null;
+    if (!this._touches.size && this._gestureLock) setTimeout(() => { this._gestureLock = false; }, 60);
+    return this._gestureLock;
+  },
+
   getScreenPos(e) {
     const rect = this.svg.getBoundingClientRect();
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
@@ -141,10 +203,13 @@ export const interaction = {
     const mode = this.state.mode;
     const editing = mode !== 'delete';
     this.closeStateMenu();
+    if (e.pointerType === 'touch' && (this.touchDown(e) || this._touches.size > 2)) return;
 
-    // Clic derecho, o touch en área vacía en modo select → pan
-    if (e.button === 2 || (e.pointerType === 'touch' && isEmpty && mode === 'select')) {
+    // Clic derecho, o un dedo sobre el fondo en cualquier modo → pan
+    if (e.button === 2 || (e.pointerType === 'touch' && isEmpty)) {
       this.state.panning = true;
+      this.state.panTouch = e.pointerType === 'touch';
+      this.state.panMoved = false;
       this.state.panStart = { x: e.clientX, y: e.clientY };
       this.state.panCamStart = { x: this.state.camera.x, y: this.state.camera.y };
       this.svg.classList.add('panning');
@@ -180,9 +245,14 @@ export const interaction = {
   },
 
   handlePointerMove(e) {
+    if (e.pointerType === 'touch' && this.touchMove(e)) return;
     if (this.state.panning) {
-      this.state.camera.x = this.state.panCamStart.x + e.clientX - this.state.panStart.x;
-      this.state.camera.y = this.state.panCamStart.y + e.clientY - this.state.panStart.y;
+      const dx = e.clientX - this.state.panStart.x;
+      const dy = e.clientY - this.state.panStart.y;
+      if (Math.abs(dx) > 6 || Math.abs(dy) > 6) this.state.panMoved = true;
+      this.state.camera.x = this.state.panCamStart.x + dx;
+      this.state.camera.y = this.state.panCamStart.y + dy;
+      if (this.state.panTouch) this.clampCamera();
       this.applyTransform();
       return;
     }
@@ -217,10 +287,16 @@ export const interaction = {
     this.renderCanvas();
   },
 
-  handlePointerUp() {
+  handlePointerUp(e) {
+    if (e?.pointerType === 'touch' && this.touchUp(e)) return;
     if (this.state.panning) {
       this.state.panning = false;
       this.svg.classList.remove('panning');
+      // Arrastrar el tablero con el dedo no cuenta como toque (no agrega un estado)
+      if (this.state.panMoved) {
+        this.state.suppressClick = true;
+        setTimeout(() => { this.state.suppressClick = false; }, 50);
+      }
       return;
     }
     // Evita que el click que sigue a un arrastre seleccione/agregue/deseleccione
@@ -239,7 +315,7 @@ export const interaction = {
   },
 
   handleClick(e) {
-    if (this.state.suppressClick) return;
+    if (this.state.suppressClick || this._gestureLock) return;
     const stateEl = e.target.closest('.state-node');
     const edgeEl = e.target.closest('.edge-group');
     const mode = this.state.mode;

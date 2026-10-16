@@ -49,7 +49,8 @@ const App = Object.assign({ state: createState() }, actions, interaction, canvas
     // Lienzo: pan & zoom, arrastre y clics
     this.svg.addEventListener('pointerdown', e => this.handlePointerDown(e));
     this.svg.addEventListener('pointermove', e => this.handlePointerMove(e));
-    document.addEventListener('pointerup', () => this.handlePointerUp());
+    document.addEventListener('pointerup', e => this.handlePointerUp(e));
+    document.addEventListener('pointercancel', e => this.handlePointerUp(e));
     this.svg.addEventListener('click', e => this.handleClick(e));
     this.svg.addEventListener('wheel', e => this.handleWheel(e));
     this.svg.addEventListener('contextmenu', e => e.preventDefault());

@@ -106,9 +106,12 @@ const selected = () => ev(`({ states: document.querySelectorAll('.state-node.is-
   edges: document.querySelectorAll('.edge-group.is-selected').length, totalEdges: document.querySelectorAll('.edge-group').length })`);
 const menuOpen = () => ev(`!!document.querySelector('.state-menu')`);
 const result = () => ev(`document.getElementById('testResult').innerText`);
+// Verifica y espera a que aparezca el resultado (la animación de la MT es larga)
 async function verify(w, wait = 4000) {
   await ev(`document.getElementById('testString').value = ${JSON.stringify(w)}; document.getElementById('btnVerify').click()`);
-  await sleep(wait);
+  const until = Date.now() + Math.max(wait, 15000);
+  await sleep(Math.min(wait, 500));
+  while (Date.now() < until && !(await ev(`document.getElementById('testResult').classList.contains('show')`))) await sleep(200);
   return result();
 }
 async function setType(type) {
@@ -356,6 +359,64 @@ await test('deshacer no actúa mientras se anima una prueba', async () => {
   check(/aceptada/i.test(await result()), 'la prueba no terminó bien');
 });
 
+await test('celular: pellizco para zoom, un dedo desplaza dentro de los límites', async () => {
+  await cmd('Emulation.setDeviceMetricsOverride', { width: 390, height: 800, deviceScaleFactor: 2, mobile: true });
+  await cmd('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
+  await sleep(300);
+  await example('afd');
+  await ev(`document.getElementById('zoomReset').click()`);
+  await sleep(200);
+  const box = await ev(`(() => { const b = document.getElementById('canvas').getBoundingClientRect(); return { x: b.x, y: b.y, w: b.width, h: b.height }; })()`);
+  const cx = Math.round(box.x + box.w / 2), cy = Math.round(box.y + box.h / 2);
+  const cam = () => ev(`(() => { const m = document.getElementById('viewport').transform.baseVal.consolidate()?.matrix; return m ? { x: m.e, y: m.f, s: m.a } : { x: 0, y: 0, s: 1 }; })()`);
+  const touch = (type, points) => cmd('Input.dispatchTouchEvent', { type, touchPoints: points.map(([x, y], id) => ({ x, y, id })) });
+  // Un toque en el fondo, en modo Agregar, crea un estado
+  await setMode('add');
+  const n = (await states()).length;
+  const spot = await ev(`(() => {
+    const b = document.getElementById('canvas').getBoundingClientRect();
+    for (let y = b.bottom - 90; y > b.top + 80; y -= 30)
+      for (let x = b.left + 30; x < b.right - 80; x += 30)
+        if (document.elementFromPoint(x, y)?.id === 'canvas') return [Math.round(x), Math.round(y)];
+  })()`);
+  check(spot, 'no encontré un lugar vacío para tocar');
+  await touch('touchStart', [spot]);
+  await touch('touchEnd', []);
+  await sleep(300);
+  check((await states()).length === n + 1, 'el toque no agregó un estado');
+  // Pellizco: los dedos se separan → acerca
+  const before = await cam();
+  await touch('touchStart', [[cx - 20, cy + 120]]);
+  await touch('touchStart', [[cx - 20, cy + 120], [cx + 20, cy + 120]]);
+  for (let k = 1; k <= 6; k++) await touch('touchMove', [[cx - 20 - k * 12, cy + 120], [cx + 20 + k * 12, cy + 120]]);
+  await touch('touchEnd', []);
+  await sleep(200);
+  const zoomed = await cam();
+  check(zoomed.s > before.s * 1.8, `el pellizco no acercó (escala ${before.s.toFixed(2)} → ${zoomed.s.toFixed(2)})`);
+  // Un dedo en modo Agregar: desplaza (sin crear estados) y no pasa de los límites
+  const m = (await states()).length;
+  const ey = Math.round(box.y + box.h - 30);
+  await touch('touchStart', [[cx, ey]]);
+  for (let k = 1; k <= 10; k++) await touch('touchMove', [[cx - k * 300, ey - k * 300]]);
+  await touch('touchEnd', []);
+  await sleep(200);
+  check((await states()).length === m, 'arrastrar el tablero con el dedo creó un estado');
+  // La vista no sale de la zona del autómata (centros de los estados ± 78 del mundo)
+  const inside = await ev(`(() => {
+    const m = document.getElementById('viewport').transform.baseVal.consolidate().matrix;
+    const c = [...document.querySelectorAll('.state-node')].map(g => g.transform.baseVal.consolidate().matrix);
+    const b = document.getElementById('canvas').getBoundingClientRect();
+    const sx = x => b.left + m.e + x * m.a, sy = y => b.top + m.f + y * m.a;
+    const l = sx(Math.min(...c.map(t => t.e)) - 78), r = sx(Math.max(...c.map(t => t.e)) + 78);
+    const t = sy(Math.min(...c.map(t => t.f)) - 78), bo = sy(Math.max(...c.map(t => t.f)) + 78);
+    return r > b.left + 1 && l < b.right - 1 && bo > b.top + 1 && t < b.bottom - 1;
+  })()`);
+  check(inside, 'el tablero se fue más allá del autómata');
+  await cmd('Emulation.setTouchEmulationEnabled', { enabled: false });
+  await cmd('Emulation.clearDeviceMetricsOverride');
+  await setMode('select');
+});
+
 await test('sin errores en la consola', async () => {
   check(!errors.length, errors.join('\n'));
 });
@@ -364,6 +425,6 @@ ws.close();
 browser.kill();
 await new Promise(r => browser.once('exit', r));
 server.close();
-await rm(profile, { recursive: true, force: true });
+await rm(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 }).catch(() => {}); // Chromium puede seguir escribiendo un instante
 console.log(failed ? `e2e: ${failed} prueba(s) fallaron` : 'e2e OK');
 process.exit(failed ? 1 : 0);
