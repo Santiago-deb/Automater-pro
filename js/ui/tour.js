@@ -16,7 +16,7 @@ const STEPS = [
   {
     target: '.type-toggle',
     title: 'Elige el tipo de máquina',
-    text: 'Autómata finito (AF, determinístico o no), autómata de pila (APD) o Máquina de Turing (MT). Cada tipo guarda su propio trabajo: si cambias y vuelves, sigue ahí.'
+    text: 'Autómata finito (AF, determinístico o no), autómata de pila (APD) o Máquina de Turing (MT). Cada tipo guarda su propio trabajo: si cambias y vuelves, sigue ahí (la primera vez aparece un ejemplo listo para probar).'
   },
   {
     target: '.canvas-area',
@@ -107,7 +107,12 @@ const STEPS = [
   {
     target: '#btnFile',
     title: 'Archivo',
-    text: 'Empezar de cero, cargar un ejemplo, abrir o guardar tu autómata, y exportar el diagrama como imagen (también con fondo blanco, para imprimir la entrega). Lo que haces se guarda solo en este navegador.'
+    text: 'Empezar de cero, abrir o guardar tu autómata como archivo, compartirlo por otra app y exportar el diagrama como imagen (también con fondo blanco, para imprimir la entrega). Si inicias sesión con Google, tus autómatas se guardan en tu Drive y aparecen en la lista "Mis autómatas".'
+  },
+  {
+    target: ['#btnExample', '#btnClear'],
+    title: 'Ejemplo y Limpiar',
+    text: 'Ejemplo carga una máquina ya armada del tipo elegido. Limpiar vacía el tablero para empezar desde cero. Los dos se pueden deshacer desde el aviso que aparece abajo.'
   },
   {
     target: '#btnHelp',

@@ -1,0 +1,67 @@
+/* Menú Archivo y toast con acción (Deshacer). */
+
+.menu-wrap { position: relative; }
+.menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 60;
+  min-width: 260px;
+  padding: 6px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  animation: fadeIn 0.15s;
+}
+.menu[hidden] { display: none; }
+.menu button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  border: none;
+  background: transparent;
+  color: var(--fg);
+  font-size: 13px;
+  text-align: left;
+  padding: 9px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.menu button small { color: var(--fg-muted); font-size: 11px; }
+.menu button:hover, .menu button:focus-visible { background: var(--bg-elev); outline: none; }
+.menu hr { border: none; border-top: 1px solid var(--border); margin: 4px 6px; }
+
+/* ---------- Toast con acción (Deshacer) ---------- */
+
+.toast.has-action { pointer-events: auto; display: flex; align-items: center; gap: 14px; }
+.toast-action {
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.toast-action:hover { background: var(--bg-elev); }
+
+@media (max-width: 760px) {
+  .menu { position: fixed; top: 60px; right: 8px; left: 8px; min-width: 0; }
+  .menu button { padding: 12px; }
+}
+
+/* ---------- Google Drive en el menú ---------- */
+.menu { max-height: calc(100dvh - 90px); overflow-y: auto; }
+.menu [hidden] { display: none; }
+.menu .google-btn { flex-direction: row; align-items: center; gap: 10px; }
+.menu .google-btn span { display: flex; flex-direction: column; gap: 1px; }
+.menu-label { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-muted); padding: 8px 12px 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.menu-label span { text-transform: none; letter-spacing: 0; }
+.drive-list { max-height: 210px; overflow-y: auto; display: flex; flex-direction: column; }
+.menu-note { font-size: 11px; color: var(--fg-muted); padding: 6px 12px; }
