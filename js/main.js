@@ -11,11 +11,13 @@ import { help } from './ui/help.js';
 import { tour } from './ui/tour.js';
 import { files } from './ui/files.js';
 import { tools } from './ui/tools.js';
+import { history } from './ui/history.js';
+import { stateMenu } from './ui/stateMenu.js';
 
 const $ = id => document.getElementById(id);
 const parseList = value => value.split(',').map(s => s.trim()).filter(s => s.length > 0);
 
-const App = Object.assign({ state: createState() }, actions, interaction, canvas, panel, modals, tapeView, help, tour, files, tools, {
+const App = Object.assign({ state: createState() }, actions, interaction, canvas, panel, modals, tapeView, help, tour, files, tools, history, stateMenu, {
   init() {
     this.svg = $('canvas');
     this.viewport = $('viewport');
@@ -29,6 +31,7 @@ const App = Object.assign({ state: createState() }, actions, interaction, canvas
     this.restoreSession();
     this.updateHint();
     this.render();
+    this.commitHistory(); // foto inicial: lo que se abrió no se puede deshacer
   },
 
   bindEvents() {
@@ -36,8 +39,10 @@ const App = Object.assign({ state: createState() }, actions, interaction, canvas
 
     document.querySelectorAll('.type-btn').forEach(btn =>
       btn.addEventListener('click', () => this.switchType(btn.dataset.type)));
-    document.querySelectorAll('.tool-btn').forEach(btn =>
+    document.querySelectorAll('.tool-btn[data-mode]').forEach(btn =>
       btn.addEventListener('click', () => this.setMode(btn.dataset.mode)));
+    on('btnUndo', 'click', () => this.undo());
+    on('btnRedo', 'click', () => this.redo());
 
     // Lienzo: pan & zoom, arrastre y clics
     this.svg.addEventListener('pointerdown', e => this.handlePointerDown(e));
@@ -52,10 +57,10 @@ const App = Object.assign({ state: createState() }, actions, interaction, canvas
     on('zoomReset', 'click', () => this.fitToView());
 
     // Alfabetos
-    on('alphabetInput', 'input', e => { this.state.alphabet = parseList(e.target.value); this.renderTransList(); });
-    on('stackAlphabetInput', 'input', e => { this.state.stackAlphabet = parseList(e.target.value); this.renderTransList(); });
-    on('initialStackInput', 'input', e => { this.state.initialStackSymbol = e.target.value.trim(); this.renderTransList(); });
-    on('tapeAlphabetInput', 'input', e => { this.state.tapeAlphabet = parseList(e.target.value); });
+    on('alphabetInput', 'input', e => { this.state.alphabet = parseList(e.target.value); this.renderTransList(); this.scheduleSave(); });
+    on('stackAlphabetInput', 'input', e => { this.state.stackAlphabet = parseList(e.target.value); this.renderTransList(); this.scheduleSave(); });
+    on('initialStackInput', 'input', e => { this.state.initialStackSymbol = e.target.value.trim(); this.renderTransList(); this.scheduleSave(); });
+    on('tapeAlphabetInput', 'input', e => { this.state.tapeAlphabet = parseList(e.target.value); this.scheduleSave(); });
     on('tapeCountInput', 'change', e => this.setTapeCount(parseInt(e.target.value)));
 
     // Verificación y acciones del header
@@ -74,8 +79,31 @@ const App = Object.assign({ state: createState() }, actions, interaction, canvas
     on('tapeModal', 'click', e => { if (e.target.id === 'tapeModal') this.closeTapeModal(); this.closeHelp(); this.closeTools(); });
     on('tapeModalConfirm', 'click', () => this.confirmTapeTransition());
     document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') { this.closeSymbolModal(); this.closeStackModal(); this.closeTapeModal(); this.closeHelp(); this.closeTools(); }
+      if (e.key === 'Escape') {
+        this.closeSymbolModal(); this.closeStackModal(); this.closeTapeModal(); this.closeHelp(); this.closeTools(); this.closeStateMenu();
+        if (this.state.selection.states.length || this.state.selection.transitions.length || this.state.connectFrom) {
+          this.clearSelection();
+          this.state.connectFrom = null;
+          this.render();
+        }
+        return;
+      }
+      this.handleShortcut(e);
     });
+  },
+
+  // Ctrl+Z deshace, Ctrl+Shift+Z (o Ctrl+Y) rehace y Supr borra lo seleccionado.
+  // En un campo de texto las teclas son del campo, y con un panel abierto no se toca el tablero.
+  handleShortcut(e) {
+    const t = e.target;
+    if (t.closest?.('input, textarea, select, [contenteditable="true"]')) return;
+    if (document.querySelector('.modal.show') || this._tour) return;
+    if (this.state.testing) return;
+    const key = e.key.toLowerCase();
+    const mod = e.ctrlKey || e.metaKey;
+    if (mod && key === 'z') { e.preventDefault(); this.closeStateMenu(); e.shiftKey ? this.redo() : this.undo(); }
+    else if (mod && key === 'y') { e.preventDefault(); this.closeStateMenu(); this.redo(); }
+    else if (key === 'delete' || (key === 'backspace' && !mod)) { e.preventDefault(); this.deleteSelection(); }
   }
 });
 

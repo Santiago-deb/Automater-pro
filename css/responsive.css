@@ -24,6 +24,7 @@
     padding: 4px;
   }
   .tool-btn { width: 36px; height: 36px; }
+  .toolbar-sep { width: 1px; height: auto; margin: 6px 2px; }
   .tool-btn svg { width: 16px; height: 16px; }
   .zoom-btn { width: 36px; height: 36px; }
   .zoom-btn svg { width: 16px; height: 16px; }

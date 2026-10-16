@@ -111,6 +111,7 @@ export const canvas = {
 
     const g = svgEl('g', {}, ['edge-group']);
     g.dataset.ids = t.ids.join(',');
+    if (t.ids.some(id => this.state.selection.transitions.includes(id))) g.classList.add('is-selected');
 
     const marker = isActive ? `url(#arrow-active${MARKER_SUFFIX[type]})` : 'url(#arrow-default)';
     g.appendChild(svgEl('path', { d, 'marker-end': marker },
@@ -137,7 +138,7 @@ export const canvas = {
       typeClass(type),
       s.isStart && 'is-start',
       s.isFinal && 'is-final',
-      this.state.selectedState === s.id && 'is-selected',
+      this.state.selection.states.includes(s.id) && 'is-selected',
       this.state.connectFrom === s.id && 'connecting-source',
       has(this.state.currentTestState, s.id) && 'current'
     ]);

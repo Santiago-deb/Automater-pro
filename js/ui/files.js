@@ -1,13 +1,13 @@
 // Archivo: autoguardado por tipo en el navegador, guardar/abrir .json (y abrir .MT de MTSolution),
 // exportar el diagrama como SVG o PNG (también con fondo blanco para imprimir)
-// y un nivel de "Deshacer" para las acciones que reemplazan el tablero.
+// y "Deshacer" en el toast de las acciones que reemplazan el tablero.
 import { AUTOMATA } from '../engine/automata.js';
 import { parseMTFile } from '../engine/table.js';
 
 const $ = id => document.getElementById(id);
 const KEY = type => `automater:v1:${type}`;
 const TYPE_KEY = 'automater:v1:type';
-const FIELDS = ['alphabet', 'stackAlphabet', 'initialStackSymbol', 'tapeAlphabet', 'tapeCount', 'modules', 'states', 'transitions'];
+export const FIELDS = ['alphabet', 'stackAlphabet', 'initialStackSymbol', 'tapeAlphabet', 'tapeCount', 'modules', 'states', 'transitions'];
 
 // localStorage puede no existir o fallar (modo privado, cuota): nunca rompe la app
 const store = {
@@ -108,7 +108,7 @@ export const files = {
     s.transitions = structuredClone(data.transitions);
     s.nextId = Math.max(0, ...s.states.map(x => x.id)) + 1;
     s.nextTransId = Math.max(0, ...s.transitions.map(x => x.id)) + 1;
-    s.selectedState = null;
+    s.selection = { states: [], transitions: [] };
     s.connectFrom = null;
     if (data.alphabet) s.alphabet = [...data.alphabet];
     if (data.stackAlphabet) s.stackAlphabet = [...data.stackAlphabet];
@@ -133,6 +133,7 @@ export const files = {
     this._saveTimer = setTimeout(() => {
       store.set(KEY(this.state.automatonType), this.serialize());
       store.set(TYPE_KEY, this.state.automatonType);
+      this.commitHistory();
     }, 300);
   },
 
@@ -149,19 +150,17 @@ export const files = {
     this.restoreOrExample();
   },
 
-  // ---------- Deshacer (un nivel) ----------
-  // Guarda el tablero antes de reemplazarlo y ofrece volver con un botón en el toast.
+  // ---------- Deshacer desde el toast ----------
+  // Antes de reemplazar el tablero se fija la foto actual en el historial
+  // (ver history.js), y el toast ofrece volver a ella.
   remember() {
-    this._undo = this.state.states.length ? this.serialize() : null;
+    this.commitHistory();
   },
 
   toastWithUndo(msg, type = 'success') {
-    const undo = this._undo;
-    if (!undo) return this.showToast(msg, type);
-    this.showToast(msg, type, {
-      label: 'Deshacer',
-      run: () => { this.applyAutomaton(undo); this._undo = null; this.showToast('Se recuperó el autómata anterior', 'success'); }
-    });
+    this.commitHistory();
+    if (!this.canUndo()) return this.showToast(msg, type);
+    this.showToast(msg, type, { label: 'Deshacer', run: () => this.undo() });
   },
 
   // ---------- Guardar / abrir ----------

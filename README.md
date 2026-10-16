@@ -57,9 +57,11 @@ Tests (sin dependencias): `node tests/engine.test.mjs && node tests/tools.test.m
 ### Guía rápida:
 1. **Configurar Alfabetos**: En el panel lateral, define los símbolos de entrada (y de pila si es APD).
 2. **Agregar Estados**: Selecciona la herramienta "+" en la barra izquierda y haz clic en el lienzo. El primer estado será el inicial.
-3. **Marcar Finales**: Haz clic sobre un estado con la herramienta "+" para alternar si es estado final (doble círculo).
-4. **Conectar**: Selecciona la herramienta de conexión (flecha), haz clic en el estado origen y luego en el destino. Se abrirá un modal para configurar la transición.
-5. **Probar**: Escribe una cadena en el campo de verificación y presiona **Verificar** para ver la animación.
+3. **Opciones de un estado**: doble clic (o doble toque) sobre un estado abre su menú: renombrar, hacer inicial, marcar o quitar final, nueva transición desde ahí y eliminar.
+4. **Seleccionar varios** (PC): con la flecha o con "+", arrastra sobre un lugar vacío para encerrar estados y aristas, o usa Shift + clic para sumar o quitar. Lo seleccionado se mueve junto y `Supr` lo borra. Un clic en el fondo deselecciona todo.
+5. **Deshacer y rehacer**: `Ctrl + Z` y `Ctrl + Shift + Z` (o `Ctrl + Y`), o las flechas de la barra izquierda.
+6. **Conectar**: Selecciona la herramienta de conexión (flecha), haz clic en el estado origen y luego en el destino. Se abrirá un modal para configurar la transición.
+7. **Probar**: Escribe una cadena en el campo de verificación y presiona **Verificar** para ver la animación.
 
 ## 🗂️ Estructura del código
 
@@ -88,7 +90,9 @@ js/
     examples.js       Autómatas de ejemplo
     automata.js       Registro de tipos: simulate + label + example por tipo
   ui/
-    interaction.js    Pan, zoom, arrastre y clics en el lienzo
+    interaction.js    Pan, zoom, arrastre, clics y selección múltiple en el lienzo
+    history.js        Deshacer / rehacer (historial por tipo)
+    stateMenu.js      Menú de un estado (doble clic)
     canvas.js         Dibujo SVG de estados y aristas
     panel.js          Listas, traza, pila visual, toasts
     modals.js         Modales para crear transiciones
@@ -96,7 +100,7 @@ js/
     help.js           Modal de Ayuda y formulario de contacto
     tour.js           Recorrido guiado (pasos y posicionamiento)
     tools.js          Modal de herramientas (una vista por herramienta)
-    files.js          Autoguardado, guardar/abrir, exportar imagen, deshacer
+    files.js          Autoguardado, guardar/abrir, exportar imagen
 tests/                Chequeos del motor y de las herramientas
 ```
 
