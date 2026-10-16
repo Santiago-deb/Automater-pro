@@ -22,7 +22,7 @@ const STEPS = [
     target: '.canvas-area',
     title: 'Moverte por el tablero',
     text: d => d === 'touch'
-      ? 'Arrastra un dedo sobre una zona vacía para desplazar el tablero (con la herramienta Seleccionar activa). Para acercar o alejar usa los botones de zoom.'
+      ? 'Como en una foto: arrastra un dedo sobre una zona vacía para desplazar el tablero y pellizca con dos dedos para acercar o alejar. El tablero no se va más allá de tu autómata.'
       : 'Gira la rueda del mouse para acercar o alejar desde donde apuntas. Para desplazar el tablero, mantén apretado el botón derecho y arrastra.'
   },
   {
