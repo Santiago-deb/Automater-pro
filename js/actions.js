@@ -58,10 +58,14 @@ export const actions = {
     this.render();
   },
 
+  // El estado nuevo se llama con el qN libre más chico: si se borró todo, vuelve a q0.
   addState(x, y) {
     const id = this.state.nextId++;
+    const used = new Set(this.state.states.map(s => s.label));
+    let n = 0;
+    while (used.has(`q${n}`)) n++;
     this.state.states.push({
-      id, x, y, label: `q${id - 1}`, isStart: this.state.states.length === 0, isFinal: false
+      id, x, y, label: `q${n}`, isStart: this.state.states.length === 0, isFinal: false
     });
     this.updateHint();
     this.render();

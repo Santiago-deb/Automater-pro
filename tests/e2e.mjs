@@ -417,6 +417,70 @@ await test('celular: pellizco para zoom, un dedo desplaza dentro de los límites
   await setMode('select');
 });
 
+await test('APD: una flecha por par de estados, un renglón por transición, sin pisarse', async () => {
+  await openFiles('apd-flechas.json');
+  await ev(`document.getElementById('zoomReset').click()`);
+  await sleep(200);
+  const stacks = () => ev(`[...document.querySelectorAll('.edge-group')].map(g => {
+    const boxes = [...g.querySelectorAll('.edge-label-bg')].map(r => r.getBoundingClientRect());
+    return { lines: [...g.querySelectorAll('.edge-line')].map(l => l.textContent),
+      box: { l: Math.min(...boxes.map(b => b.left)), r: Math.max(...boxes.map(b => b.right)),
+        t: Math.min(...boxes.map(b => b.top)), b: Math.max(...boxes.map(b => b.bottom)) } };
+  })`);
+  const st = await stacks();
+  check(st.length === 3, `hay ${st.length} flechas (esperaba ida, vuelta y bucle)`);
+  check(st.map(s => s.lines.length).join() === '3,3,2', `renglones: ${st.map(s => s.lines.length)}`);
+  check(st[0].lines.join('|') === 'a, E/ε|a, B/B|a, Z/Z', `rótulos: ${st[0].lines.join('|')}`);
+  const circles = (await states()).map(s => ({ l: s.x - 28, r: s.x + 28, t: s.y - 28, b: s.y + 28 }));
+  const cross = (a, b) => a.l < b.r && b.l < a.r && a.t < b.b && b.t < a.b;
+  st.forEach((a, i) => st.slice(i + 1).forEach(b => check(!cross(a.box, b.box), `se pisan los rótulos ${a.lines[0]} y ${b.lines[0]}`)));
+  st.forEach(a => circles.forEach(c => check(!cross(a.box, c), `el rótulo ${a.lines[0]} tapa un estado`)));
+
+  // Clic en un renglón: elige o borra solo esa transición
+  const line = (g, k) => ev(`(() => { const b = document.querySelectorAll('.edge-group')[${g}].querySelectorAll('.edge-label-bg')[${k}].getBoundingClientRect();
+    return { x: Math.round(b.x + b.width / 2), y: Math.round(b.y + b.height / 2) }; })()`);
+  await setMode('select');
+  const b = await line(0, 1);
+  await click(b.x, b.y);
+  check(await ev(`[...document.querySelectorAll('.edge-line.is-selected')].map(l => l.textContent).join()`) === 'a, B/B', 'el clic no eligió solo ese renglón');
+  await setMode('delete');
+  await click(b.x, b.y);
+  check((await stacks())[0].lines.join('|') === 'a, E/ε|a, Z/Z', 'no borró solo ese renglón');
+  await undoKey();
+  check((await stacks())[0].lines.length === 3, 'Ctrl+Z no lo recuperó');
+  await setMode('select');
+
+  // Al probar una cadena se resalta el renglón que se usó, no toda la flecha
+  await ev(`document.getElementById('btnVerify').click()`);
+  let on = [];
+  for (const until = Date.now() + 5000; Date.now() < until && !on.includes('a, B/B'); await sleep(100)) {
+    on = await ev(`[...document.querySelectorAll('.edge-line.is-active')].map(l => l.textContent)`);
+    check(on.length <= 1, `se resaltaron ${on.length} renglones a la vez: ${on.join(', ')}`);
+  }
+  check(on.includes('a, B/B'), 'no se resaltó el renglón a, B/B');
+  check(/aceptada/i.test(await verify('ca', 3000)), 'no aceptó ca');
+  check(/✗.*q11/.test(await verify('cab', 3000)), 'aceptó cab (termina en q11, que no es final)');
+});
+
+await test('los estados nuevos toman el qN libre más chico (q0 si se borró todo)', async () => {
+  await example('afd');
+  const s = await states();
+  await drag(Math.min(...s.map(p => p.x)) - 60, Math.min(...s.map(p => p.y)) - 90, Math.max(...s.map(p => p.x)) + 60, Math.max(...s.map(p => p.y)) + 60);
+  await key('Delete', 'Delete', 46);
+  check((await states()).length === 0, 'no se borró todo');
+  await setMode('add');
+  const box = await ev(`(() => { const b = document.getElementById('canvas').getBoundingClientRect(); return { x: b.x + b.width / 2, y: b.y + b.height / 2 }; })()`);
+  for (const dx of [-150, 0, 150]) await click(Math.round(box.x + dx), Math.round(box.y));
+  check((await states()).map(p => p.label).join() === 'q0,q1,q2', `quedaron ${(await states()).map(p => p.label)}`);
+  await setMode('delete');
+  const q1 = await byLabel('q1');
+  await click(q1.x, q1.y);
+  await setMode('add');
+  await click(Math.round(box.x), Math.round(box.y) + 120);
+  check((await states()).map(p => p.label).sort().join() === 'q0,q1,q2', `después de borrar q1 quedaron ${(await states()).map(p => p.label)}`);
+  await setMode('select');
+});
+
 await test('sin errores en la consola', async () => {
   check(!errors.length, errors.join('\n'));
 });
