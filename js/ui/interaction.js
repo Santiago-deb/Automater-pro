@@ -166,13 +166,15 @@ export const interaction = {
       return dx * dx + dy * dy <= STATE_RADIUS * STATE_RADIUS;
     }).map(s => s.id);
     const transitions = new Set();
+    const add = el => el.dataset.ids.split(',').forEach(id => transitions.add(Number(id)));
     this.edgesGroup.querySelectorAll('.edge-group').forEach(g => {
       const path = g.querySelector('.edge-path');
       const len = path.getTotalLength();
-      const label = g.querySelector('.edge-label');
-      const touched = inside({ x: +label.getAttribute('x'), y: +label.getAttribute('y') }) ||
-        Array.from({ length: 17 }, (_, k) => path.getPointAtLength(len * k / 16)).some(inside);
-      if (touched) g.dataset.ids.split(',').forEach(id => transitions.add(Number(id)));
+      if (Array.from({ length: 17 }, (_, k) => path.getPointAtLength(len * k / 16)).some(inside)) add(g);
+      g.querySelectorAll('.edge-line').forEach(line => {
+        const label = line.querySelector('.edge-label');
+        if (inside({ x: +label.getAttribute('x'), y: +label.getAttribute('y') })) add(line);
+      });
     });
     return { states, transitions: [...transitions] };
   },
@@ -323,7 +325,8 @@ export const interaction = {
     if (stateEl) {
       this.handleStateClick(parseInt(stateEl.dataset.id), e);
     } else if (edgeEl) {
-      const ids = edgeEl.dataset.ids.split(',').map(Number);
+      // Un renglón del rótulo es esa transición; la flecha, todas las del par
+      const ids = (e.target.closest('.edge-line') ?? edgeEl).dataset.ids.split(',').map(Number);
       if (mode === 'delete') this.deleteTransition(ids);
       else this.pick('transitions', ids, e.shiftKey);
     } else if (mode === 'add' && !e.shiftKey) {

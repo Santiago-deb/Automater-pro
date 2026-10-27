@@ -202,21 +202,27 @@
   cursor: pointer;
 }
 
+/* Cada renglón del rótulo es una transición: se puede clickear aparte */
 .edge-label-bg {
   fill: var(--bg-deep);
   stroke: var(--border-light);
   stroke-width: 1.5;
+  cursor: pointer;
+}
+/* Tapa la arista detrás de un rótulo de varios renglones */
+.edge-label-backdrop {
+  fill: var(--bg-deep);
   pointer-events: none;
 }
-.edge-path.is-active ~ .edge-label-bg {
+.edge-line.is-active .edge-label-bg {
   fill: var(--accent);
   stroke: var(--accent);
 }
-.edge-path.is-active:is(.apd, .mt) ~ .edge-label-bg {
+.edge-line.is-active:is(.apd, .mt) .edge-label-bg {
   fill: var(--type);
   stroke: var(--type);
 }
-.edge-path.is-active ~ .edge-label {
+.edge-line.is-active .edge-label {
   fill: var(--bg-deep);
 }
 
@@ -234,9 +240,9 @@
 
 /* Selección múltiple: aristas elegidas y rectángulo de selección */
 .edge-group.is-selected .edge-path { stroke: var(--accent); stroke-width: 3; }
-.edge-group.is-selected .edge-label-bg { stroke: var(--accent); stroke-width: 1.5; }
+.edge-line.is-selected .edge-label-bg { stroke: var(--accent); stroke-width: 1.5; }
 body:is(.apd, .mt) .edge-group.is-selected .edge-path,
-body:is(.apd, .mt) .edge-group.is-selected .edge-label-bg { stroke: var(--type); }
+body:is(.apd, .mt) .edge-line.is-selected .edge-label-bg { stroke: var(--type); }
 .state-node.is-selected .state-circle { filter: drop-shadow(0 0 8px var(--accent-glow)); }
 .state-node:is(.apd, .mt).is-selected .state-circle { filter: drop-shadow(0 0 8px var(--type-glow)); }
 .marquee {

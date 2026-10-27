@@ -95,7 +95,7 @@ export const modals = {
     const info = $('multiEdgeInfo');
     info.style.display = existing > 0 ? 'block' : 'none';
     if (existing > 0) {
-      info.textContent = `Ya hay ${existing} transición(es) entre ${fromState.label} y ${toState.label}. Puedes agregar más.`;
+      info.textContent = `Ya hay ${existing} transición(es) de ${fromState.label} a ${toState.label}. La nueva se suma como otro renglón de la misma flecha.`;
     }
 
     const eps = symbolButton('ε', 'symbol-btn epsilon', () => this.selectStackInput(''));

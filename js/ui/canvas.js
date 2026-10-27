@@ -9,17 +9,26 @@ const MARKER_SUFFIX = { afd: '', apd: '-stack', mt: '-tape' }; // ids de <marker
 // currentTestState / activeTransition pueden ser un id o una lista (AFND)
 const has = (value, id) => (Array.isArray(value) ? value.includes(id) : value === id);
 
-// En el AF, las transiciones entre el mismo par de estados van en una sola
-// arista rotulada "a, b" (así se dibuja en la cursada).
-function groupEdges(transitions) {
+// Rótulo de una transición (un renglón).
+function edgeText(t, type) {
+  return t.callOnly ?? AUTOMATA[type].label(t) + (t.output ? `, ${t.output}` : '') + (t.call ? ` ${callLabel(t.call)} ${t.marks}` : '');
+}
+
+// Las transiciones entre el mismo par de estados van en una sola arista (así se
+// dibuja en la cursada): en el AF rotulada "a, b"; en el APD y la MT con un
+// renglón por transición, uno arriba del otro, y cada renglón se elige o se borra aparte.
+function groupEdges(edges, type) {
   const groups = new Map();
-  for (const t of transitions) {
+  for (const t of edges) {
     const key = `${t.from}>${t.to}`;
-    if (!groups.has(key)) groups.set(key, { ...t, ids: [], symbols: [] });
-    groups.get(key).ids.push(t.id);
-    groups.get(key).symbols.push(t.symbol);
+    if (!groups.has(key)) groups.set(key, { from: t.from, to: t.to, ids: [], lines: [] });
+    const g = groups.get(key);
+    g.ids.push(...t.ids);
+    g.lines.push({ ids: t.ids, text: edgeText(t, type) });
   }
-  return [...groups.values()];
+  const list = [...groups.values()];
+  if (type === 'afd') list.forEach(g => { g.lines = [{ ids: g.ids, text: g.lines.map(l => l.text).join(', ') }]; });
+  return list;
 }
 
 // MT: una llamada a sub-máquina va al estado de aceptación (✓) y, si son otros,
@@ -41,14 +50,17 @@ function svgEl(tag, attrs = {}, classes = []) {
   return el;
 }
 
-// Geometría de una arista: bucle, recta, o curva si hay aristas paralelas/inversas.
-function edgeGeometry(t, from, to, transitions) {
+// Geometría de una arista: bucle, recta, o curva si hay otra en sentido contrario.
+// (nx, ny) es hacia dónde se aleja el rótulo cuando no entra en un renglón.
+function edgeGeometry(t, from, to, edges) {
   if (t.from === t.to) {
     const { x, y } = from;
     return {
       d: `M ${x - 10} ${y - r + 4} C ${x - 42} ${y - r - 32}, ${x + 42} ${y - r - 32}, ${x + 10} ${y - r + 4}`,
       midX: x,
-      midY: y - r - 18
+      midY: y - r - 18,
+      nx: 0,
+      ny: -1
     };
   }
 
@@ -62,35 +74,30 @@ function edgeGeometry(t, from, to, transitions) {
   const ex = to.x - ux * r;
   const ey = to.y - uy * r;
 
-  const samePair = transitions.filter(rt =>
-    (rt.from === t.from && rt.to === t.to) || (rt.from === t.to && rt.to === t.from)
-  );
-  const hasReverse = transitions.some(rt => rt.from === t.to && rt.to === t.from);
-
-  if (!hasReverse && samePair.length <= 1) {
-    return { d: `M ${sx} ${sy} L ${ex} ${ey}`, midX: (sx + ex) / 2, midY: (sy + ey) / 2 };
+  if (!edges.some(e => e.from === t.to && e.to === t.from)) {
+    return { d: `M ${sx} ${sy} L ${ex} ${ey}`, midX: (sx + ex) / 2, midY: (sy + ey) / 2, nx: 0, ny: 0 };
   }
 
-  const pairIndex = samePair.findIndex(rt => rt.id === t.id);
-  const spread = samePair.length > 1 ? (pairIndex - (samePair.length - 1) / 2) * 46 : 0; // rótulos de 20px sin pisarse
-  const offset = (hasReverse ? 38 : 0) + spread;
+  const offset = 38;
   const cpx = (sx + ex) / 2 - uy * offset;
   const cpy = (sy + ey) / 2 + ux * offset;
   return {
     d: `M ${sx} ${sy} Q ${cpx} ${cpy} ${ex} ${ey}`,
     // Punto medio de la Bézier cuadrática (t = 0.5)
     midX: 0.25 * sx + 0.5 * cpx + 0.25 * ex,
-    midY: 0.25 * sy + 0.5 * cpy + 0.25 * ey
+    midY: 0.25 * sy + 0.5 * cpy + 0.25 * ey,
+    nx: -uy,
+    ny: ux
   };
 }
+
+const LINE_H = 22; // un renglón del rótulo: píldora de 20 px + 2 de aire
 
 export const canvas = {
   renderCanvas() {
     this.edgesGroup.innerHTML = '';
     this.statesGroup.innerHTML = '';
-    const edges = this.state.automatonType === 'afd'
-      ? groupEdges(this.state.transitions)
-      : this.state.transitions.flatMap(callEdges);
+    const edges = groupEdges(this.state.transitions.flatMap(callEdges), this.state.automatonType);
     edges.forEach(t => this.renderEdge(t, edges));
     this.state.states.forEach(s => this.renderState(s));
   },
@@ -100,33 +107,43 @@ export const canvas = {
     const to = this.getState(t.to);
     if (!from || !to) return;
 
-    const isActive = t.ids.some(id => has(this.state.activeTransition, id));
+    const active = ids => ids.some(id => has(this.state.activeTransition, id));
+    const selected = ids => ids.some(id => this.state.selection.transitions.includes(id));
+    const isActive = active(t.ids);
     const type = this.state.automatonType;
     const theme = typeClass(type);
     const geo = edgeGeometry(t, from, to, edges);
-    const { d, midX } = geo;
-    // Varios bucles en un mismo estado: los rótulos se apilan hacia arriba
-    const loopIndex = t.from === t.to ? edges.filter(e => e.from === t.from && e.to === t.to).findIndex(e => e.id === t.id) : 0;
-    const midY = geo.midY - loopIndex * 22;
 
     const g = svgEl('g', {}, ['edge-group']);
     g.dataset.ids = t.ids.join(',');
-    if (t.ids.some(id => this.state.selection.transitions.includes(id))) g.classList.add('is-selected');
+    if (selected(t.ids)) g.classList.add('is-selected');
 
     const marker = isActive ? `url(#arrow-active${MARKER_SUFFIX[type]})` : 'url(#arrow-default)';
-    g.appendChild(svgEl('path', { d, 'marker-end': marker },
+    g.appendChild(svgEl('path', { d: geo.d, 'marker-end': marker },
       ['edge-path', isActive && 'is-active', isActive && theme]));
-    g.appendChild(svgEl('path', { d }, ['edge-hit']));
+    g.appendChild(svgEl('path', { d: geo.d }, ['edge-hit']));
 
-    const label = t.symbols ? t.symbols.join(', ')
-      : t.callOnly ? t.callOnly
-      : AUTOMATA[type].label(t) + (t.output ? `, ${t.output}` : '') + (t.call ? ` ${callLabel(t.call)} ${t.marks}` : '');
-    const labelW = label.length * 7 + 14;
-    g.appendChild(svgEl('rect',
-      { x: midX - labelW / 2, y: midY - 10, width: labelW, height: 20, rx: 10 }, ['edge-label-bg']));
-    const text = svgEl('text', { x: midX, y: midY }, ['edge-label', theme]);
-    text.textContent = label;
-    g.appendChild(text);
+    // Renglones apilados y centrados; si son más de uno, el bloque se corre hacia
+    // afuera de la curva (lo que mide de más) para no pisar la arista de vuelta.
+    const w = Math.max(...t.lines.map(l => l.text.length * 7 + 14));
+    const h = t.lines.length * LINE_H - 2;
+    const push = Math.max(0, Math.abs(geo.nx) * w / 2 + Math.abs(geo.ny) * h / 2 - 10);
+    const cx = geo.midX + geo.nx * push;
+    const cy = geo.midY + geo.ny * push;
+    if (t.lines.length > 1) {
+      g.appendChild(svgEl('rect', { x: cx - w / 2, y: cy - h / 2, width: w, height: h, rx: 10 }, ['edge-label-backdrop']));
+    }
+    t.lines.forEach((line, i) => {
+      const y = cy - h / 2 + 10 + i * LINE_H;
+      const on = active(line.ids);
+      const lg = svgEl('g', {}, ['edge-line', on && 'is-active', on && theme, selected(line.ids) && 'is-selected']);
+      lg.dataset.ids = line.ids.join(',');
+      lg.appendChild(svgEl('rect', { x: cx - w / 2, y: y - 10, width: w, height: 20, rx: 10 }, ['edge-label-bg']));
+      const text = svgEl('text', { x: cx, y }, ['edge-label', theme]);
+      text.textContent = line.text;
+      lg.appendChild(text);
+      g.appendChild(lg);
+    });
 
     this.edgesGroup.appendChild(g);
   },
